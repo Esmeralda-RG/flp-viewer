@@ -119,6 +119,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
 
   // ── boilerplate header ────────────────────────────────────────────────────
   L('#lang eopl')
+  L('(provide (all-defined-out))')
   L('')
   L(';;; ============================================================')
   L(';;; main.rkt — Generado por FLP Viewer')

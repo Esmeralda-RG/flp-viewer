@@ -173,7 +173,9 @@ export const TEMPLATE_ENVIRONMENT = `#lang eopl
 
 (define extend-env
   (lambda (syms vals env)
-    (extended-env-record syms (list->vector vals) env)))
+    (let ([new-env (extended-env-record syms (list->vector vals) env)])
+      (snapshot-env! new-env)
+      new-env)))
 
 (define apply-env-ref
   (lambda (env sym)
@@ -232,6 +234,21 @@ export const TEMPLATE_ENVIRONMENT = `#lang eopl
      '(x y z)
      '(1 2 3)
      (empty-env))))
+
+;; ──── FLP-VIEWER-TRACKING-START ────────────────────────────────────
+;; Tracking de ambientes para FLP Viewer (eliminado al descargar)
+(define _env-log '())
+(define (reset-env-log!) (set! _env-log '()))
+(define (env-log) _env-log)
+(define (env->frames e)
+  (cases environment e
+    (empty-env-record () '())
+    (extended-env-record (syms vec inner-env)
+      (cons (map cons syms (vector->list vec))
+            (env->frames inner-env)))))
+(define (snapshot-env! e)
+  (set! _env-log (cons (list 'extend (env->frames e)) _env-log)))
+;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────
 `
 
 export const TEMPLATE_UTILS = `#lang racket
@@ -321,6 +338,8 @@ export const TEMPLATE_UTILS = `#lang racket
 `
 
 export const TEMPLATE_MAIN = `#lang eopl
+(provide (all-defined-out))
+
 (require "grammar.rkt")
 (require "environment.rkt")
 (require "utils.rkt")
