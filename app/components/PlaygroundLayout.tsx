@@ -16,13 +16,7 @@ import { generateUtilsRkt } from '@/app/lib/utils-generator'
 // Initial state
 // ---------------------------------------------------------------------------
 
-const INITIAL_CODE = `; factorial recursivo
-(define (factorial n)
-  (if (= n 0)
-      1
-      (* n (factorial (- n 1)))))
-
-(factorial 5)
+const INITIAL_CODE = `; intérprete simple — escribe tu código aquí
 `
 
 const INITIAL_FILES: EditorFile[] = [
@@ -32,7 +26,7 @@ const INITIAL_FILES: EditorFile[] = [
     name: 'main.rkt',
     content: INITIAL_CODE,
     language: 'scheme',
-    lockedLines: [2, 7],
+    lockedLines: [],
   },
   {
     id: 'utils',
@@ -58,14 +52,12 @@ function ResizeBar({ className }: Readonly<{ className?: string }>) {
   )
 }
 
-// Strip FLP-VIEWER-TRACKING block and uncomment interpreter
+// Strip FLP-VIEWER-TRACKING block and uncomment interpreter for download
 function prepareForDownload(file: EditorFile): EditorFile {
   if (file.name === 'environment.rkt') {
     const content = file.content
       .replace(/\n?;; ──── FLP-VIEWER-TRACKING-START ────[\s\S]*?;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────\n?/g, '\n')
-      // Remove snapshot-env! call in extend-env
-      .replace(/\(let \(\[new-env \(extended-env-record syms \(list->vector vals\) env\)\]\)\n\s+\(snapshot-env! new-env\)\n\s+new-env\)/g,
-        '(extended-env-record syms (list->vector vals) env)')
+      .trimEnd() + '\n'
     return { ...file, content }
   }
   if (file.name === 'main.rkt') {
@@ -161,17 +153,12 @@ export default function PlaygroundLayout() {
       if (result.ast) setAst(result.ast)
       if (result.environments.length > 0) setFrames(result.environments)
 
-      if (result.output && result.output !== '"void"' && result.output !== 'null') {
-        addLog(result.output, 'output')
-      }
-      if (result.stdout) {
-        result.stdout.split('\n').filter(Boolean).forEach((line) => addLog(line, 'output'))
-      }
       if (result.stderr) {
         result.stderr.split('\n').filter(Boolean).forEach((line) => addLog(line, 'error'))
-      }
-      if (!result.output && !result.stdout && !result.stderr && !result.error) {
-        addLog('(sin salida)', 'info')
+      } else if (result.output !== null && result.output !== '"void"' && result.output !== 'null') {
+        addLog(result.output, 'output')
+      } else if (!result.stderr) {
+        addLog('void', 'info')
       }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') {

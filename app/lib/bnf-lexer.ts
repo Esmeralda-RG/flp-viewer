@@ -1,15 +1,16 @@
 export type TokenKind =
-  | 'NONTERMINAL' // <name>
-  | 'TERMINAL'    // "..." or '...'
-  | 'PRODUCES'    // ::=
-  | 'ALT'         // |
-  | 'LPAREN'      // (
-  | 'RPAREN'      // )
-  | 'STAR'        // *
-  | 'PLUS'        // +
-  | 'QUESTION'    // ?
-  | 'ARROW'       // =>
-  | 'IDENT'       // bare word (variant names or unquoted non-terminals)
+  | 'NONTERMINAL'   // <name>
+  | 'TERMINAL'      // "..." or '...'
+  | 'PRODUCES'      // ::=
+  | 'ALT'           // |
+  | 'LPAREN'        // (
+  | 'RPAREN'        // )
+  | 'STAR'          // *
+  | 'PLUS'          // +
+  | 'QUESTION'      // ?
+  | 'ARROW'         // =>
+  | 'IDENT'         // bare word (variant names or unquoted non-terminals)
+  | 'LEX_DIRECTIVE' // %lex (raw SLLGEN lexical rule)
   | 'EOF'
 
 export interface Token {
@@ -42,6 +43,17 @@ export function tokenize(input: string): Token[] {
 
     // Whitespace
     if (ch === ' ' || ch === '\t' || ch === '\r') { i++; continue }
+
+    // %lex directive — rest of line is a raw SLLGEN lexical rule
+    if (ch === '%' && input.slice(i, i + 4) === '%lex') {
+      const startCol = col()
+      i += 4
+      while (i < input.length && (input[i] === ' ' || input[i] === '\t')) i++
+      let raw = ''
+      while (i < input.length && input[i] !== '\n') raw += input[i++]
+      tokens.push({ kind: 'LEX_DIRECTIVE', value: raw.trim(), line, col: startCol })
+      continue
+    }
 
     // Line comments: ; // #
     if (ch === ';' || (ch === '/' && input[i + 1] === '/') || ch === '#') {

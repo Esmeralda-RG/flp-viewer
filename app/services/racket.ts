@@ -83,13 +83,16 @@ interface RawSnapshot {
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
   return raw.map((snap, i) => {
     const s = snap as RawSnapshot
-    const bindings: Binding[] = []
-    for (const frame of s.frames ?? []) {
-      for (const [name, val] of Object.entries(frame)) {
-        bindings.push({ name, value: valueToString(val), type: valueType(val) })
-      }
+    const scopes: Binding[][] = (s.frames ?? []).map(frame =>
+      Object.entries(frame).map(([name, val]) => ({
+        name, value: valueToString(val), type: valueType(val),
+      }))
+    )
+    return {
+      label: `#${i + 1} (${s.tag ?? 'extend'})`,
+      bindings: scopes.flat(),
+      scopes,
     }
-    return { label: `#${i + 1} (${s.tag ?? 'extend'})`, bindings }
   })
 }
 

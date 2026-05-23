@@ -17,7 +17,15 @@ const EDITOR_OPTIONS = {
   padding: { top: 10 },
 }
 
-const DEFAULT_BNF = `<program> ::= <expr>
+const DEFAULT_BNF = `; ── Tokens disponibles ──────────────────────────────────────
+; number  float  identifier  binary  octal  hex  text
+; (whitespace y comment siempre se incluyen automáticamente)
+; Omite esta sección para incluir todos los tokens del curso.
+%lex number
+%lex identifier
+
+; ── Gramática ────────────────────────────────────────────────
+<program> ::= <expr>
 
 <expr> ::= <number>                              => lit-exp
          | <identifier>                          => var-exp

@@ -21,6 +21,7 @@ export interface GrammarRule {
 }
 
 export interface GrammarAST {
+  lexicalRules: string[]
   rules: GrammarRule[]
 }
 
@@ -142,10 +143,15 @@ export function parse(tokens: Token[]): GrammarAST {
     return { lhs, productions }
   }
 
+  const lexicalRules: string[] = []
+  while (check('LEX_DIRECTIVE')) {
+    lexicalRules.push(consume('LEX_DIRECTIVE').value)
+  }
+
   const rules: GrammarRule[] = []
   while (!check('EOF')) {
     rules.push(parseRule())
   }
 
-  return { rules }
+  return { lexicalRules, rules }
 }

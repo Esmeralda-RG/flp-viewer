@@ -173,9 +173,7 @@ export const TEMPLATE_ENVIRONMENT = `#lang eopl
 
 (define extend-env
   (lambda (syms vals env)
-    (let ([new-env (extended-env-record syms (list->vector vals) env)])
-      (snapshot-env! new-env)
-      new-env)))
+    (extended-env-record syms (list->vector vals) env)))
 
 (define apply-env-ref
   (lambda (env sym)
@@ -240,14 +238,18 @@ export const TEMPLATE_ENVIRONMENT = `#lang eopl
 (define _env-log '())
 (define (reset-env-log!) (set! _env-log '()))
 (define (env-log) _env-log)
-(define (env->frames e)
+(define (_env->frames e)
   (cases environment e
     (empty-env-record () '())
     (extended-env-record (syms vec inner-env)
       (cons (map cons syms (vector->list vec))
-            (env->frames inner-env)))))
-(define (snapshot-env! e)
-  (set! _env-log (cons (list 'extend (env->frames e)) _env-log)))
+            (_env->frames inner-env)))))
+(define _orig-extend-env extend-env)
+(set! extend-env
+  (lambda (syms vals env)
+    (let ([new-env (_orig-extend-env syms vals env)])
+      (set! _env-log (cons (list 'extend (_env->frames new-env)) _env-log))
+      new-env)))
 ;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────
 `
 

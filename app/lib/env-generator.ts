@@ -1,6 +1,8 @@
 export function generateEnvironmentRkt(): string {
   return `#lang eopl
 
+(provide (all-defined-out))
+
 ;;; ============================================================
 ;;; environment.rkt — Utilidades generadas por FLP Viewer
 ;;; Universidad del Valle — Intérprete Educativo
@@ -104,14 +106,23 @@ export function generateEnvironmentRkt(): string {
       (list #t #f '())
       (empty-env))))
 
-;; ---------------------------------------------------------------------------
-;; Exports
-;; ---------------------------------------------------------------------------
-
-(provide
-  environment? empty-env extend-env extend-env* apply-env apply-env-ref
-  reference? a-ref deref setref!
-  empty-store initialize-store! newref
-  init-env)
+;; ──── FLP-VIEWER-TRACKING-START ────────────────────────────────────
+;; Tracking de ambientes para FLP Viewer (eliminado al descargar)
+(define _env-log '())
+(define (reset-env-log!) (set! _env-log '()))
+(define (env-log) _env-log)
+(define (_env->frames e)
+  (cases environment e
+    (empty-env-record () '())
+    (extended-env-record (syms refs inner-env)
+      (cons (map cons syms (vector->list refs))
+            (_env->frames inner-env)))))
+(define _orig-extend-env extend-env)
+(set! extend-env
+  (lambda (syms vals env)
+    (let ([new-env (_orig-extend-env syms vals env)])
+      (set! _env-log (cons (list 'extend (_env->frames new-env)) _env-log))
+      new-env)))
+;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────
 `
 }

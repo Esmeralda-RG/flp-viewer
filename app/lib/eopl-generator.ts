@@ -3,6 +3,60 @@ import type { GrammarAST, GrammarRule, Production, BNFItem } from './bnf-parser'
 // Non-terminals that map directly to SLLGEN lexer primitives
 const PRIMITIVES = new Set(['number', 'identifier', 'string', 'boolean', 'letter', 'digit'])
 
+// Whitespace y comment siempre se auto-incluyen al inicio del lexical-spec
+const AUTO_RULES = [
+  '(whitespace (whitespace+) skip)',
+  '(comment ("//" (arbno (not #\\newline))) skip)',
+]
+
+// Palabras clave que los estudiantes pueden usar en %lex
+const LEX_KEYWORDS: Record<string, string[]> = {
+  number: [
+    '(decimal (digit+) number)',
+    '(decimal ("-" digit+) number)',
+  ],
+  float: [
+    '(float (digit (arbno digit) "." digit (arbno digit)) number)',
+    '(float ("-" digit (arbno digit) "." digit (arbno digit)) number)',
+  ],
+  identifier: [
+    '(identifier (letter (arbno (or letter digit "?"))) symbol)',
+  ],
+  binary: [
+    '(binary ("b" (or "0" "1") (arbno (or "0" "1"))) string)',
+    '(binary ("-" "b" (or "0" "1") (arbno (or "0" "1"))) string)',
+  ],
+  octal: [
+    '(octal ("0x" (or "0" "1" "2" "3" "4" "5" "6" "7") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7"))) string)',
+    '(octal ("-" "0x" (or "0" "1" "2" "3" "4" "5" "6" "7") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7"))) string)',
+  ],
+  hex: [
+    '(hex ("hx" (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F"))) string)',
+    '(hex ("-" "hx" (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F"))) string)',
+  ],
+  text: [
+    '(text ("\\"" (arbno (not #\\"))) string)',
+  ],
+}
+
+// Alias
+LEX_KEYWORDS['string'] = LEX_KEYWORDS['text']
+
+const DEFAULT_LEXICAL_RULES = [
+  ...LEX_KEYWORDS['identifier'],
+  ...LEX_KEYWORDS['binary'],
+  ...LEX_KEYWORDS['number'],
+  ...LEX_KEYWORDS['octal'],
+  ...LEX_KEYWORDS['hex'],
+  ...LEX_KEYWORDS['float'],
+]
+
+function expandLexRule(rule: string): string[] {
+  if (rule.startsWith('(')) return [rule]
+  const expanded = LEX_KEYWORDS[rule.toLowerCase()]
+  return expanded ?? [`; %lex: palabra clave desconocida "${rule}"`]
+}
+
 function sym(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '')
 }
@@ -78,7 +132,13 @@ function productionLine(lhsSym: string, prod: Production, index: number): string
 }
 
 export function generateGrammarRkt(ast: GrammarAST): string {
-  const lines = ast.rules.flatMap((rule: GrammarRule) => {
+  const expanded = ast.lexicalRules.length > 0
+    ? ast.lexicalRules.flatMap(expandLexRule)
+    : DEFAULT_LEXICAL_RULES
+  const lexRules = [...AUTO_RULES, ...expanded]
+  const lexLines = lexRules.map(r => `    ${r}`).join('\n')
+
+  const grammarLines = ast.rules.flatMap((rule: GrammarRule) => {
     const s = sym(rule.lhs)
     return rule.productions.map((prod, i) => productionLine(s, prod, i))
   })
@@ -90,15 +150,13 @@ export function generateGrammarRkt(ast: GrammarAST): string {
 ;;; ============================================================
 
 (define lexical-spec
-  '((whitespace (whitespace+) skip)
-    (comment (";" (arbno (not #\newline))) skip)
-    (identifier (letter (arbno (or letter digit "_" "-"))) symbol)
-    (number (digit+) number)
-    (number ("-" digit+) number)))
+  '(
+${lexLines}
+  ))
 
 (define grammar
   '(
-${lines.join('\n')}
+${grammarLines.join('\n')}
   ))
 
 (provide lexical-spec grammar)

@@ -25,17 +25,19 @@ const RUNNER_RKT = `#lang racket
     [(pair? v) (map json-value v)]
     [(vector? v) (map json-value (vector->list v))]
     [(struct? v)
-     (let* ([data   (struct->vector v)]
-            [type   (symbol->string (vector-ref data 0))]
-            [fields (for/list ([i (in-range 1 (vector-length data))])
-                      (json-value (vector-ref data i)))])
+     (let* ([data     (struct->vector v)]
+            [raw-type (symbol->string (vector-ref data 0))]
+            [type     (regexp-replace #rx"^struct:" raw-type "")]
+            [fields   (for/list ([i (in-range 1 (vector-length data))])
+                        (json-value (vector-ref data i)))])
        (hasheq 'type type 'fields fields))]
     [(procedure? v) (hasheq 'type "procedure")]
     [else (format "~a" v)]))
 
 (define (frame->json frame)
+  ;; JSON hash keys must be symbols in Racket's json library
   (for/hasheq ([binding frame])
-    (values (symbol->string (car binding)) (json-value (cdr binding)))))
+    (values (car binding) (json-value (cdr binding)))))
 
 (define (env-snapshot->json snapshot)
   (match snapshot
@@ -61,6 +63,18 @@ const RUNNER_RKT = `#lang racket
 interface FileEntry {
   name: string
   content: string
+}
+
+// Strip Racket's verbose "context...: / location..." section from error output
+function cleanStderr(raw: string): string {
+  const lines = raw.split('\n')
+  const kept: string[] = []
+  for (const line of lines) {
+    if (/^\s+(context|location)\.\.\.:/.test(line)) break
+    if (/^\s+\[repeats \d+ more/.test(line)) continue
+    kept.push(line)
+  }
+  return kept.join('\n').trim()
 }
 
 export async function POST(request: Request) {
@@ -102,7 +116,7 @@ export async function POST(request: Request) {
 
     return Response.json({
       stdout: trace ? '' : stdout.trim(),
-      stderr: stderr.trim(),
+      stderr: cleanStderr(stderr),
       error: null,
       trace,
     })
@@ -112,14 +126,14 @@ export async function POST(request: Request) {
       stderr?: string
       stdout?: string
     }
-    const stderr = (e.stderr ?? '').trim()
+    const rawStderr = (e.stderr ?? '').trim()
     const error = e.killed
       ? 'Tiempo de ejecución agotado (> 15 s)'
       : (e.message ?? 'Error desconocido')
 
     return Response.json({
       stdout: (e.stdout ?? '').trim(),
-      stderr: stderr || error,
+      stderr: cleanStderr(rawStderr) || error,
       error,
       trace: null,
     })
