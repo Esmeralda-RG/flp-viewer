@@ -6,10 +6,18 @@ export interface EditorFileLike {
   content: string
 }
 
+export interface StepResult {
+  ast: ASTNode | null
+  output: string | null
+  environments: EnvFrame[]
+}
+
 export interface TraceResult {
   stdout: string
   stderr: string
   error: string | null
+  steps: StepResult[]
+  // Last step conveniences
   ast: ASTNode | null
   environments: EnvFrame[]
   output: string | null
@@ -45,7 +53,7 @@ function toASTNode(v: unknown): ASTNode | null {
 
 // ── Environment conversion ────────────────────────────────────────────────────
 
-function valueToString(v: unknown): string {
+export function valueToString(v: unknown): string {
   if (v === null || v === undefined) return 'null'
   if (typeof v === 'boolean') return String(v)
   if (typeof v === 'number') return String(v)
@@ -96,6 +104,15 @@ function toEnvFrames(raw: unknown[]): EnvFrame[] {
   })
 }
 
+function parseStep(raw: unknown): StepResult {
+  const s = raw as Record<string, unknown>
+  return {
+    ast: toASTNode(s.ast),
+    output: valueToString(s.output),
+    environments: Array.isArray(s.environments) ? toEnvFrames(s.environments) : [],
+  }
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function runTrace(
@@ -110,37 +127,32 @@ export async function runTrace(
     signal,
   })
 
+  const empty: TraceResult = {
+    stdout: '', stderr: '', error: null,
+    steps: [], ast: null, environments: [], output: null,
+  }
+
   if (!res.ok) {
-    return {
-      stdout: '',
-      stderr: `HTTP ${res.status}: ${res.statusText}`,
-      error: res.statusText,
-      ast: null,
-      environments: [],
-      output: null,
-    }
+    return { ...empty, stderr: `HTTP ${res.status}: ${res.statusText}`, error: res.statusText }
   }
 
   const data = (await res.json()) as {
     stdout: string
     stderr: string
     error: string | null
-    trace?: Record<string, unknown> | null
+    steps?: unknown[] | null
   }
 
-  const trace = data.trace
-  const ast = trace ? toASTNode(trace.ast) : null
-  const environments = trace && Array.isArray(trace.environments)
-    ? toEnvFrames(trace.environments)
-    : []
-  const output = trace ? valueToString(trace.output) : null
+  const steps = Array.isArray(data.steps) ? data.steps.map(parseStep) : []
+  const last = steps.at(-1) ?? null
 
   return {
     stdout: data.stdout ?? '',
     stderr: data.stderr ?? '',
     error: data.error,
-    ast,
-    environments,
-    output,
+    steps,
+    ast: last?.ast ?? null,
+    environments: last?.environments ?? [],
+    output: last?.output ?? null,
   }
 }
