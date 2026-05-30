@@ -1,15 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export type LogLevel = 'info' | 'error' | 'warn' | 'output' | 'input'
-
-export interface LogEntry {
-  id: string
-  level: LogLevel
-  message: string
-  timestamp: number
-}
+import type { LogLevel, LogEntry } from '@/app/types/console'
+export type { LogLevel, LogEntry }
 
 const levelStyles: Record<LogLevel, string> = {
   input:  'text-sky-300',
@@ -33,7 +27,10 @@ interface ConsoleOutputProps {
   onInputChange: (v: string) => void
   onSubmit: () => void
   running: boolean
+  sessionActive: boolean
   onClear: () => void
+  pendingSteps: number
+  onNextStep: () => void
 }
 
 export default function ConsoleOutput({
@@ -42,14 +39,25 @@ export default function ConsoleOutput({
   onInputChange,
   onSubmit,
   running,
+  sessionActive,
   onClear,
+  pendingSteps,
+  onNextStep,
 }: Readonly<ConsoleOutputProps>) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [prevSession, setPrevSession] = useState(false)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [logs])
+
+  useEffect(() => {
+    if (sessionActive && !prevSession) {
+      textareaRef.current?.focus()
+    }
+    setPrevSession(sessionActive)
+  }, [sessionActive, prevSession])
 
   useEffect(() => {
     const ta = textareaRef.current
@@ -61,13 +69,13 @@ export default function ConsoleOutput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (!running && inputValue.trim()) onSubmit()
+      if (sessionActive && !running && inputValue.trim()) onSubmit()
     }
   }
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
-      {/* Header */}
+       
       <div className="flex items-center px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
         <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Consola</span>
         <span className="ml-2 text-xs text-zinc-600">({logs.length})</span>
@@ -79,11 +87,11 @@ export default function ConsoleOutput({
         </button>
       </div>
 
-      {/* Log history */}
+       
       <div className="flex-1 overflow-auto p-2 font-mono text-xs">
         {logs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-zinc-600">
-            Escribe una expresión abajo y presiona Enter
+            {sessionActive ? 'Escribe una expresión y presiona Enter' : 'Presiona ▶ Ejecutar para comenzar'}
           </div>
         ) : (
           <div className="space-y-0.5">
@@ -100,22 +108,39 @@ export default function ConsoleOutput({
         )}
       </div>
 
-      {/* REPL input area */}
+       
       <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] flex items-start gap-2 px-3 py-2 shrink-0">
-        <span className="text-sky-400 font-mono text-xs pt-[3px] shrink-0 select-none">--&gt;</span>
-        <textarea
-          ref={textareaRef}
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="expresión… (Enter ejecuta · Shift+Enter nueva línea)"
-          disabled={running}
-          rows={1}
-          spellCheck={false}
-          className="flex-1 resize-none bg-transparent font-mono text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none disabled:opacity-50 leading-relaxed"
-        />
-        {running && (
-          <span className="text-[10px] text-zinc-500 pt-1 shrink-0 animate-pulse">ejecutando…</span>
+        {pendingSteps > 0 ? (
+          <>
+            <span className="font-mono text-xs pt-0.75 shrink-0 text-blue-400 select-none">--&gt;</span>
+            <button
+              onClick={onNextStep}
+              className="flex-1 text-left text-xs text-blue-300 hover:text-blue-200 transition-colors"
+            >
+              ▶ Siguiente paso{' '}
+              <span className="ml-2 text-[10px] text-zinc-500">({pendingSteps} restante{pendingSteps === 1 ? '' : 's'})</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <span className={`font-mono text-xs pt-0.75 shrink-0 select-none ${sessionActive ? 'text-sky-400' : 'text-zinc-700'}`}>
+              --&gt;
+            </span>
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => onInputChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={sessionActive ? 'expresión… (Enter ejecuta · Shift+Enter nueva línea)' : 'Presiona ▶ Ejecutar para activar'}
+              disabled={!sessionActive || running}
+              rows={1}
+              spellCheck={false}
+              className="flex-1 resize-none bg-transparent font-mono text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none disabled:opacity-50 leading-relaxed"
+            />
+            {running && (
+              <span className="text-[10px] text-zinc-500 pt-1 shrink-0 animate-pulse">ejecutando…</span>
+            )}
+          </>
         )}
       </div>
     </div>

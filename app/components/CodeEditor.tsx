@@ -12,7 +12,7 @@ export interface CodeEditorProps {
   onChange: (value: string) => void
   language?: string
   theme?: string
-  /** 1-indexed line numbers whose content cannot be modified */
+   
   lockedLines?: number[]
 }
 

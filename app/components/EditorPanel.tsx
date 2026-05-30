@@ -1,16 +1,8 @@
 'use client'
 
 import CodeEditor from './CodeEditor'
-
-export interface EditorFile {
-  id: string
-  /** Increment to force-remount the editor (e.g. when lockedLines change) */
-  revision: number
-  name: string
-  content: string
-  language: string
-  lockedLines?: number[]
-}
+import type { EditorFile } from '@/app/types/editor'
+export type { EditorFile }
 
 interface EditorPanelProps {
   files: EditorFile[]
@@ -27,7 +19,7 @@ export default function EditorPanel({
 }: Readonly<EditorPanelProps>) {
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
-      {/* Tab bar */}
+       
       <div className="flex items-end bg-[#252526] border-b border-[#3c3c3c] shrink-0 overflow-x-auto">
         {files.map((file) => {
           const active = file.id === activeFileId
@@ -47,13 +39,13 @@ export default function EditorPanel({
             </button>
           )
         })}
-        {/* Language hint for active file */}
+         
         <div className="ml-auto px-3 py-2 text-[10px] text-zinc-600 shrink-0">
           {files.find((f) => f.id === activeFileId)?.language}
         </div>
       </div>
 
-      {/* Editor area — all editors mounted, only active one visible */}
+       
       <div className="flex-1 min-h-0 relative">
         {files.map((file) => (
           <div
@@ -77,7 +69,7 @@ export default function EditorPanel({
   )
 }
 
-function FileIcon({ name }: { name: string }) {
+function FileIcon({ name }: Readonly<{ name: string }>) {
   const ext = name.split('.').pop() ?? ''
   const colors: Record<string, string> = {
     rkt: 'text-red-400',

@@ -3,14 +3,20 @@
 import { useState, useCallback, useRef } from 'react'
 import { Panel, Group, Separator } from 'react-resizable-panels'
 import JSZip from 'jszip'
-import Navbar, { type Example } from './Navbar'
+import Navbar from './Navbar'
+import type { Example } from '@/app/types/examples'
 import EditorPanel, { type EditorFile } from './EditorPanel'
 import ASTViewer, { type ASTNode } from './ASTViewer'
 import ConsoleOutput, { type LogEntry } from './ConsoleOutput'
 import EnvironmentPanel, { type EnvFrame } from './EnvironmentPanel'
 import GrammarModal, { type GeneratedGrammarFiles } from './GrammarModal'
-import { runTrace } from '@/app/services/racket'
+import WelcomeModal from './WelcomeModal'
+import InitEnvModal from './InitEnvModal'
+import HelpDrawer from './HelpDrawer'
+import { runTrace, type StepResult } from '@/app/services/racket'
 import { generateUtilsRkt } from '@/app/lib/utils-generator'
+import { parseInitEnv, updateInitEnvInContent, type InitBinding } from '@/app/lib/init-env-utils'
+import type { HelpSection } from '@/app/types/help'
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -52,22 +58,10 @@ function ResizeBar({ className }: Readonly<{ className?: string }>) {
   )
 }
 
-// Strip FLP-VIEWER-TRACKING block and uncomment interpreter for download
 function prepareForDownload(file: EditorFile): EditorFile {
-  if (file.name === 'environment.rkt') {
-    const content = file.content
-      .replace(/\n?;; ──── FLP-VIEWER-TRACKING-START ────[\s\S]*?;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────\n?/g, '\n')
-      .trimEnd() + '\n'
-    return { ...file, content }
-  }
-  if (file.name === 'main.rkt') {
-    const content = file.content.replace(
-      /^; \(interpreter\)(.*)$/m,
-      '(interpreter)$1',
-    )
-    return { ...file, content }
-  }
-  return file
+  if (file.name !== 'main.rkt') return file
+  const content = file.content.replace(/^; \(interpreter\)(.*)$/m, '(interpreter)$1')
+  return { ...file, content }
 }
 
 async function downloadZip(files: EditorFile[], zipName = 'flp-project.zip') {
@@ -103,20 +97,45 @@ function upsertFile(
   return next
 }
 
+function createInitEnvModalElement(
+  files: EditorFile[],
+  onClose: () => void,
+  onApply: (bindings: InitBinding[]) => void,
+) {
+  const envFile = files.find((f) => f.name === 'environment.rkt')
+  const currentBindings = envFile ? parseInitEnv(envFile.content) : []
+
+  return (
+    <InitEnvModal
+      bindings={currentBindings}
+      onClose={onClose}
+      onApply={onApply}
+    />
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function PlaygroundLayout() {
-  const [files, setFiles] = useState<EditorFile[]>(INITIAL_FILES)
-  const [activeFileId, setActiveFileId] = useState('main')
+export default function PlaygroundLayout({ examples, helpSections }: Readonly<{ examples: Example[]; helpSections: HelpSection[] }>) {
+  const defaultExample = examples.find((e) => e.id === 'hola-mundo')
+  const [files, setFiles] = useState<EditorFile[]>(
+    defaultExample?.files?.map((f) => ({ ...f, revision: 0 })) ?? INITIAL_FILES
+  )
+  const [activeFileId, setActiveFileId] = useState(defaultExample?.activeFileId ?? 'main')
   const [grammarModalOpen, setGrammarModalOpen] = useState(false)
+  const [initEnvModalOpen, setInitEnvModalOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [testInput, setTestInput] = useState('')
 
   const [ast, setAst] = useState<ASTNode | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [frames, setFrames] = useState<EnvFrame[]>([])
   const [running, setRunning] = useState(false)
+  const [sessionActive, setSessionActive] = useState(false)
+  const [stepMode, setStepMode] = useState(false)
+  const [pendingSteps, setPendingSteps] = useState<StepResult[]>([])
 
   const abortRef = useRef<AbortController | null>(null)
 
@@ -126,6 +145,23 @@ export default function PlaygroundLayout() {
       { id: crypto.randomUUID(), level, message, timestamp: Date.now() },
     ])
   }, [])
+
+  const showStep = useCallback((step: StepResult) => {
+    if (step.ast) setAst(step.ast)
+    if (step.environments.length > 0) setFrames(step.environments)
+    if (step.output !== null && step.output !== '"void"' && step.output !== 'null') {
+      addLog(step.output, 'output')
+    } else {
+      addLog('void', 'info')
+    }
+  }, [addLog])
+
+  const handleNextStep = useCallback(() => {
+    if (pendingSteps.length === 0) return
+    const [next, ...rest] = pendingSteps
+    setPendingSteps(rest)
+    showStep(next)
+  }, [pendingSteps, showStep])
 
   const handleRun = useCallback(async () => {
     if (running) return
@@ -138,8 +174,7 @@ export default function PlaygroundLayout() {
     const controller = new AbortController()
     abortRef.current = controller
     setRunning(true)
-
-    // Echo the input into the log and clear the textarea immediately
+    setPendingSteps([])
     addLog(expr, 'input')
     setTestInput('')
 
@@ -150,30 +185,47 @@ export default function PlaygroundLayout() {
         controller.signal,
       )
 
-      if (result.ast) setAst(result.ast)
-      if (result.environments.length > 0) setFrames(result.environments)
-
       if (result.stderr) {
         result.stderr.split('\n').filter(Boolean).forEach((line) => addLog(line, 'error'))
-      } else if (result.output !== null && result.output !== '"void"' && result.output !== 'null') {
-        addLog(result.output, 'output')
-      } else if (!result.stderr) {
-        addLog('void', 'info')
+      } else if (result.steps.length > 0) {
+        if (stepMode && result.steps.length > 1) {
+          const [first, ...rest] = result.steps
+          showStep(first)
+          setPendingSteps(rest)
+        } else {
+          result.steps.forEach((step) => {
+            if (step.output !== null && step.output !== '"void"' && step.output !== 'null') {
+              addLog(step.output, 'output')
+            } else {
+              addLog('void', 'info')
+            }
+          })
+          const last = result.steps.at(-1)
+          if (last) {
+          if (last.ast) setAst(last.ast)
+          if (last.environments.length > 0) setFrames(last.environments)
+          }
+        }
       }
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        addLog('Ejecución detenida.', 'info')
-      } else {
+      const isAbort = err instanceof Error && err.name === 'AbortError'
+      if (!isAbort) {
         addLog('Error al conectar con el servidor de ejecución.', 'error')
       }
     } finally {
       setRunning(false)
       abortRef.current = null
     }
-  }, [files, testInput, running, addLog])
+  }, [files, testInput, running, stepMode, addLog, showStep])
 
-  const handleStop = useCallback(() => {
+  const handleStartSession = useCallback(() => {
+    setSessionActive(true)
+  }, [])
+
+  const handleStopSession = useCallback(() => {
     abortRef.current?.abort()
+    setSessionActive(false)
+    setTestInput('')
   }, [])
 
   const handleClear = useCallback(() => {
@@ -183,6 +235,8 @@ export default function PlaygroundLayout() {
   }, [])
 
   const handleExampleSelect = useCallback((example: Example) => {
+    setSessionActive(false)
+    setTestInput('')
     if (example.files) {
       setFiles((prev) => {
         const revMap = new Map(prev.map((f) => [f.id, f.revision]))
@@ -208,6 +262,13 @@ export default function PlaygroundLayout() {
   }, [])
 
   const handleGrammarGenerate = useCallback((generated: GeneratedGrammarFiles) => {
+    abortRef.current?.abort()
+    setSessionActive(false)
+    setTestInput('')
+    setAst(null)
+    setLogs([])
+    setFrames([])
+    setPendingSteps([])
     setFiles((prev) => {
       let next = upsertFile(prev, 'grammar-input', 'grammar-input.bnf', generated.input, 'plaintext')
       next = upsertFile(next, 'grammar-rkt', 'grammar.rkt', generated.grammarRkt, 'scheme')
@@ -227,16 +288,34 @@ export default function PlaygroundLayout() {
     setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)))
   }, [])
 
+  const initEnvModalElement = initEnvModalOpen ? createInitEnvModalElement(
+    files,
+    () => setInitEnvModalOpen(false),
+    (bindings: InitBinding[]) => {
+      const ef = files.find((f) => f.name === 'environment.rkt')
+      if (!ef) return
+      const newContent = updateInitEnvInContent(ef.content, bindings)
+      setFiles((prev) => prev.map((f) =>
+        f.id === ef.id ? { ...f, content: newContent, revision: f.revision + 1 } : f
+      ))
+      setInitEnvModalOpen(false)
+    },
+  ) : null
+
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-white">
       <Navbar
+        examples={examples}
         onExampleSelect={handleExampleSelect}
         onGrammarOpen={() => setGrammarModalOpen(true)}
         onDownload={handleDownload}
-        onRun={handleRun}
-        onStop={handleStop}
+        onRun={handleStartSession}
+        onStop={handleStopSession}
         onClear={handleClear}
-        running={running}
+        onHelpOpen={() => setHelpOpen(true)}
+        running={sessionActive}
+        stepMode={stepMode}
+        onStepModeToggle={() => { setStepMode((m) => !m); setPendingSteps([]) }}
       />
 
       <div className="flex-1 overflow-hidden">
@@ -259,7 +338,10 @@ export default function PlaygroundLayout() {
                   </Panel>
                   <ResizeBar className="h-1 cursor-row-resize" />
                   <Panel id="env-panel" defaultSize={45} minSize={20}>
-                    <EnvironmentPanel frames={frames} />
+                    <EnvironmentPanel
+                  frames={frames}
+                  onEditInitEnv={() => setInitEnvModalOpen(true)}
+                />
                   </Panel>
                 </Group>
               </Panel>
@@ -273,7 +355,10 @@ export default function PlaygroundLayout() {
               onInputChange={setTestInput}
               onSubmit={handleRun}
               running={running}
+              sessionActive={sessionActive}
               onClear={handleClear}
+              pendingSteps={pendingSteps.length}
+              onNextStep={handleNextStep}
             />
           </Panel>
         </Group>
@@ -285,6 +370,12 @@ export default function PlaygroundLayout() {
           onGenerate={handleGrammarGenerate}
         />
       )}
+
+      {initEnvModalElement}
+
+      <HelpDrawer open={helpOpen} onClose={() => setHelpOpen(false)} sections={helpSections} />
+
+      <WelcomeModal />
     </div>
   )
 }
