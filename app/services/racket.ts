@@ -1,27 +1,10 @@
-import type { ASTNode } from '@/app/components/ASTViewer'
-import type { EnvFrame, Binding } from '@/app/components/EnvironmentPanel'
+import type { ASTNode } from '@/app/types/ast'
+import type { EnvFrame, Binding } from '@/app/types/environment'
+import type { EditorFileLike, StepResult, TraceResult } from '@/app/types/racket'
+export type { EditorFileLike, StepResult, TraceResult }
 
-export interface EditorFileLike {
-  name: string
-  content: string
-}
-
-export interface StepResult {
-  ast: ASTNode | null
-  output: string | null
-  environments: EnvFrame[]
-}
-
-export interface TraceResult {
-  stdout: string
-  stderr: string
-  error: string | null
-  steps: StepResult[]
-  // Last step conveniences
-  ast: ASTNode | null
-  environments: EnvFrame[]
-  output: string | null
-}
+// Re-export for legacy consumers
+export type { ASTNode, EnvFrame, Binding }
 
 // ── AST conversion ────────────────────────────────────────────────────────────
 
@@ -47,6 +30,7 @@ function toASTNode(v: unknown): ASTNode | null {
         children: children.length > 0 ? children : undefined,
       }
     }
+    return { type: JSON.stringify(v) }
   }
   return { type: String(v) }
 }
@@ -65,6 +49,7 @@ export function valueToString(v: unknown): string {
   if (typeof v === 'object') {
     const obj = v as Record<string, unknown>
     if (typeof obj.type === 'string') return `<${obj.type}>`
+    return JSON.stringify(v)
   }
   return String(v)
 }
@@ -91,16 +76,15 @@ interface RawSnapshot {
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
   return raw.map((snap, i) => {
     const s = snap as RawSnapshot
-    const scopes: Binding[][] = (s.frames ?? []).map(frame =>
+    const frames: Binding[][] = (s.frames ?? []).map(frame =>
       Object.entries(frame).map(([name, val]) => ({
         name, value: valueToString(val), type: valueType(val),
       }))
     )
-    return {
-      label: `#${i + 1} (${s.tag ?? 'extend'})`,
-      bindings: scopes.flat(),
-      scopes,
-    }
+    const label = s.tag === 'empty-env' ? 'empty-env'
+                : s.tag === 'init-env'  ? 'init-env'
+                : 'extend'
+    return { label, frames }
   })
 }
 

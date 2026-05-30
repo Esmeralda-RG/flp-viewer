@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { readFileSync } from 'node:fs'
 import { writeFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,55 +11,16 @@ const RACKET_BIN =
   process.env.RACKET_BIN ??
   '/Applications/Racket v9.1/bin/racket'
 
-// Runner injected at execution time — uses trace-json strategy from environment.rkt tracking
-const RUNNER_RKT = `#lang racket
-(require json)
-(require "grammar.rkt")
-(require "environment.rkt")
-(require "utils.rkt")
-(require "main.rkt")
+const RKT_DIR = join(process.cwd(), 'app/api/run')
+const RUNNER_RKT      = readFileSync(join(RKT_DIR, '_runner.rkt'), 'utf8')
+const TRACKING_BLOCK  = readFileSync(join(RKT_DIR, '_tracking.rkt'), 'utf8')
+const STREAM_PARSER_BLOCK = readFileSync(join(RKT_DIR, '_stream-parser.rkt'), 'utf8')
 
-(define (json-value v)
-  (cond
-    [(or (null? v) (boolean? v) (number? v) (string? v)) v]
-    [(symbol? v) (symbol->string v)]
-    [(pair? v) (map json-value v)]
-    [(vector? v) (map json-value (vector->list v))]
-    [(struct? v)
-     (let* ([data     (struct->vector v)]
-            [raw-type (symbol->string (vector-ref data 0))]
-            [type     (regexp-replace #rx"^struct:" raw-type "")]
-            [fields   (for/list ([i (in-range 1 (vector-length data))])
-                        (json-value (vector-ref data i)))])
-       (hasheq 'type type 'fields fields))]
-    [(procedure? v) (hasheq 'type "procedure")]
-    [else (format "~a" v)]))
-
-(define (frame->json frame)
-  ;; JSON hash keys must be symbols in Racket's json library
-  (for/hasheq ([binding frame])
-    (values (car binding) (json-value (cdr binding)))))
-
-(define (env-snapshot->json snapshot)
-  (match snapshot
-    [(list tag frames)
-     (hasheq 'tag (symbol->string tag)
-             'frames (map frame->json frames))]
-    [_ (hasheq 'tag "unknown" 'frames '())]))
-
-(define (run-trace source)
-  (reset-env-log!)
-  (define ast (scan&parse source))
-  (define output (eval-program ast))
-  (hasheq 'ast    (json-value ast)
-          'output (json-value output)
-          'environments (map env-snapshot->json (reverse (env-log)))))
-
-(define args (current-command-line-arguments))
-(define input (if (zero? (vector-length args)) "void" (vector-ref args 0)))
-(write-json (run-trace input))
-(newline)
-`
+function injectRuntime(name: string, content: string): string {
+  if (name === 'environment.rkt') return content + TRACKING_BLOCK
+  if (name === 'main.rkt') return content + STREAM_PARSER_BLOCK
+  return content
+}
 
 interface FileEntry {
   name: string
@@ -95,7 +57,7 @@ export async function POST(request: Request) {
 
     tmpDir = await mkdtemp(join(tmpdir(), 'flp-'))
 
-    await Promise.all(files.map((f) => writeFile(join(tmpDir!, f.name), f.content, 'utf8')))
+    await Promise.all(files.map((f) => writeFile(join(tmpDir!, f.name), injectRuntime(f.name, f.content), 'utf8')))
     await writeFile(join(tmpDir, '_runner.rkt'), RUNNER_RKT, 'utf8')
 
     const { stdout, stderr } = await execFileAsync(
@@ -103,24 +65,28 @@ export async function POST(request: Request) {
       [join(tmpDir, '_runner.rkt'), testInput],
       {
         timeout: 15_000,
+        signal: request.signal,
         env: { ...process.env, PLTDISABLE_BROWSER_REDIRECT: '1' },
       },
     )
 
-    let trace: Record<string, unknown> | null = null
+    let steps: unknown[] | null = null
     try {
-      trace = JSON.parse(stdout.trim()) as Record<string, unknown>
+      const parsed = JSON.parse(stdout.trim())
+      if (Array.isArray(parsed)) steps = parsed
     } catch {
       // not JSON — plain racket output
     }
 
     return Response.json({
-      stdout: trace ? '' : stdout.trim(),
+      stdout: steps ? '' : stdout.trim(),
       stderr: cleanStderr(stderr),
       error: null,
-      trace,
+      steps,
     })
   } catch (err: unknown) {
+    if (request.signal.aborted) return new Response(null, { status: 499 })
+
     const e = err as NodeJS.ErrnoException & {
       killed?: boolean
       stderr?: string
