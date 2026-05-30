@@ -3,28 +3,16 @@ export function generateEnvironmentRkt(): string {
 
 (provide (all-defined-out))
 
-;;; ============================================================
-;;; environment.rkt — Utilidades generadas por FLP Viewer
-;;; Universidad del Valle — Intérprete Educativo
-;;; ============================================================
-
-;; ---------------------------------------------------------------------------
-;; Datatypes
-;; ---------------------------------------------------------------------------
-
 (define-datatype environment environment?
   (empty-env-record)
   (extended-env-record
-    (syms  (list-of symbol?))
-    (refs  vector?)
-    (env   environment?)))
+   (syms (list-of symbol?))
+   (vec  vector?)
+   (env  environment?)))
 
 (define-datatype reference reference?
-  (a-ref (pos integer?) (vec vector?)))
-
-;; ---------------------------------------------------------------------------
-;; Ambiente
-;; ---------------------------------------------------------------------------
+  (a-ref (position integer?)
+         (vec vector?)))
 
 (define empty-env
   (lambda ()
@@ -32,57 +20,24 @@ export function generateEnvironmentRkt(): string {
 
 (define extend-env
   (lambda (syms vals env)
-    (extended-env-record
-      syms
-      (list->vector (map newref vals))
-      env)))
-
-(define extend-env*
-  (lambda (syms vals env)
-    (if (null? syms)
-        env
-        (extend-env syms vals env))))
-
-(define apply-env
-  (lambda (env sym)
-    (deref (apply-env-ref env sym))))
+    (extended-env-record syms (list->vector vals) env)))
 
 (define apply-env-ref
   (lambda (env sym)
     (cases environment env
       (empty-env-record ()
-        (eopl:error 'apply-env "Variable no ligada: ~s" sym))
-      (extended-env-record (syms refs saved-env)
-        (let loop ((i 0) (ss syms))
-          (cond
-            ((null? ss)
-             (apply-env-ref saved-env sym))
-            ((eqv? sym (car ss))
-             (a-ref i refs))
-            (else
-             (loop (+ i 1) (cdr ss)))))))))
-
-;; ---------------------------------------------------------------------------
-;; Store (referencias mutables)
-;; ---------------------------------------------------------------------------
-
-(define the-store 'uninitialized)
-
-(define empty-store
-  (lambda ()
-    (set! the-store '())))
-
-(define initialize-store!
-  (lambda ()
-    (empty-store)))
-
-(define newref
-  (lambda (val)
-    (let ((next-ref (length the-store)))
-      (set! the-store (append the-store (list val)))
-      next-ref)))
+        (eopl:error 'apply-env-ref "No binding for ~s" sym))
+      (extended-env-record (syms vals env)
+        (let ((pos (rib-find-position sym syms)))
+          (if (number? pos)
+              (a-ref pos vals)
+              (apply-env-ref env sym)))))))
 
 (define deref
+  (lambda (ref)
+    (primitive-deref ref)))
+
+(define primitive-deref
   (lambda (ref)
     (cases reference ref
       (a-ref (pos vec)
@@ -90,39 +45,40 @@ export function generateEnvironmentRkt(): string {
 
 (define setref!
   (lambda (ref val)
+    (primitive-setref! ref val)))
+
+(define primitive-setref!
+  (lambda (ref val)
     (cases reference ref
       (a-ref (pos vec)
         (vector-set! vec pos val)))))
 
-;; ---------------------------------------------------------------------------
-;; Ambiente inicial
-;; ---------------------------------------------------------------------------
+(define rib-find-position
+  (lambda (sym los)
+    (list-find-position sym los)))
+
+(define list-find-position
+  (lambda (sym los)
+    (list-index (lambda (sym1) (eqv? sym1 sym)) los)))
+
+(define list-index
+  (lambda (pred ls)
+    (cond
+      ((null? ls) #f)
+      ((pred (car ls)) 0)
+      (else (let ((r (list-index pred (cdr ls))))
+              (if (number? r) (+ r 1) #f))))))
+
+(define apply-env
+  (lambda (env sym)
+    (deref (apply-env-ref env sym))))
 
 (define init-env
   (lambda ()
-    (initialize-store!)
     (extend-env
-      '(true false emptylist)
-      (list #t #f '())
-      (empty-env))))
+     '(x y z)
+     '(1 2 3)
+     (empty-env))))
 
-;; ──── FLP-VIEWER-TRACKING-START ────────────────────────────────────
-;; Tracking de ambientes para FLP Viewer (eliminado al descargar)
-(define _env-log '())
-(define (reset-env-log!) (set! _env-log '()))
-(define (env-log) _env-log)
-(define (_env->frames e)
-  (cases environment e
-    (empty-env-record () '())
-    (extended-env-record (syms refs inner-env)
-      (cons (map cons syms (vector->list refs))
-            (_env->frames inner-env)))))
-(define _orig-extend-env extend-env)
-(set! extend-env
-  (lambda (syms vals env)
-    (let ([new-env (_orig-extend-env syms vals env)])
-      (set! _env-log (cons (list 'extend (_env->frames new-env)) _env-log))
-      new-env)))
-;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────
 `
 }

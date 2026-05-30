@@ -5,15 +5,15 @@ const PRIMITIVES = new Set(['number', 'identifier', 'string', 'boolean', 'letter
 
 // Whitespace y comment siempre se auto-incluyen al inicio del lexical-spec
 const AUTO_RULES = [
-  '(whitespace (whitespace+) skip)',
-  '(comment ("//" (arbno (not #\\newline))) skip)',
+  '(whitespace (whitespace) skip)',
+  String.raw`(comment ("//" (arbno (not #\newline))) skip)`,
 ]
 
 // Palabras clave que los estudiantes pueden usar en %lex
 const LEX_KEYWORDS: Record<string, string[]> = {
   number: [
-    '(decimal (digit+) number)',
-    '(decimal ("-" digit+) number)',
+    '(number (digit+) number)',
+    '(number ("-" digit+) number)',
   ],
   float: [
     '(float (digit (arbno digit) "." digit (arbno digit)) number)',
@@ -35,26 +35,42 @@ const LEX_KEYWORDS: Record<string, string[]> = {
     '(hex ("-" "hx" (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F"))) string)',
   ],
   text: [
-    '(text ("\\"" (arbno (not #\\"))) string)',
+    String.raw`(text ("\"" (arbno (not #\"))) string)`,
   ],
 }
 
 // Alias
 LEX_KEYWORDS['string'] = LEX_KEYWORDS['text']
 
+// En el modo default los floats también producen token "number" para que
+// <number> en el BNF capture enteros y decimales sin distinción.
+const DEFAULT_FLOAT_AS_NUMBER = [
+  '(number (digit (arbno digit) "." digit (arbno digit)) number)',
+  '(number ("-" digit (arbno digit) "." digit (arbno digit)) number)',
+]
+
 const DEFAULT_LEXICAL_RULES = [
   ...LEX_KEYWORDS['identifier'],
   ...LEX_KEYWORDS['binary'],
   ...LEX_KEYWORDS['number'],
+  ...DEFAULT_FLOAT_AS_NUMBER,
   ...LEX_KEYWORDS['octal'],
   ...LEX_KEYWORDS['hex'],
-  ...LEX_KEYWORDS['float'],
 ]
 
 function expandLexRule(rule: string): string[] {
   if (rule.startsWith('(')) return [rule]
   const expanded = LEX_KEYWORDS[rule.toLowerCase()]
-  return expanded ?? [`; %lex: palabra clave desconocida "${rule}"`]
+  return expanded ?? [`; ⚠ "${rule}" — falta implementar: (${rule} (...) tipo)`]
+}
+
+export function getLexErrors(lexInput: string): string[] {
+  return lexInput
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith(';') && !l.startsWith('('))
+    .filter((l) => !LEX_KEYWORDS[l.toLowerCase()])
+    .map((l) => `Token sin implementar: "${l}" — escribe la regla sllgen: (${l} (...) tipo)`)
 }
 
 function sym(name: string): string {
@@ -69,13 +85,22 @@ function ntSym(name: string): string {
   return isPrimitive(name) ? name.toLowerCase() : sym(name)
 }
 
+function escapeSllgenTerminal(raw: string): string {
+  // In sllgen, terminals are Racket strings — escape backslash and double-quote
+  return raw.replaceAll('\\', '\\\\').replaceAll('"', String.raw`\"`)
+}
+
+function terminalToSllgen(value: string): string {
+  return `"${escapeSllgenTerminal(value)}"`
+}
+
 function itemToSllgen(item: BNFItem): string {
   switch (item.kind) {
     case 'nonterminal':
       return ntSym(item.name)
 
     case 'terminal':
-      return `"${item.value}"`
+      return terminalToSllgen(item.value)
 
     case 'nonterminal-rep': {
       const s = ntSym(item.name)
@@ -86,7 +111,28 @@ function itemToSllgen(item: BNFItem): string {
     }
 
     case 'group': {
-      // Detect separated-list pattern: (A sep)* where sep is a terminal
+      // Detect: [<A> ("sep" <A>)*]  →  (separated-list A sep)
+      // This is the correct EBNF notation for separated lists
+      if (
+        item.op === '?' &&
+        item.items.length === 2 &&
+        item.items[0].kind !== 'terminal' &&
+        item.items[1].kind === 'group'
+      ) {
+        const inner = item.items[1]
+        if (
+          inner.op === '*' &&
+          inner.items.length === 2 &&
+          inner.items[0].kind === 'terminal' &&
+          inner.items[1].kind !== 'terminal'
+        ) {
+          const elem = itemToSllgen(item.items[0])
+          const sep = terminalToSllgen((inner.items[0]).value)
+          return `(separated-list ${elem} ${sep})`
+        }
+      }
+
+      // Legacy shorthand: (A sep)* — kept for backward compatibility
       if (
         item.op === '*' &&
         item.items.length === 2 &&
@@ -94,7 +140,7 @@ function itemToSllgen(item: BNFItem): string {
         item.items[1].kind === 'terminal'
       ) {
         const elem = itemToSllgen(item.items[0])
-        const sep = `"${(item.items[1]).value}"`
+        const sep = terminalToSllgen((item.items[1]).value)
         return `(separated-list ${elem} ${sep})`
       }
 
@@ -131,11 +177,19 @@ function productionLine(lhsSym: string, prod: Production, index: number): string
   return `    (${lhsSym} (${items}) ${variantName})`
 }
 
-export function generateGrammarRkt(ast: GrammarAST): string {
-  const expanded = ast.lexicalRules.length > 0
-    ? ast.lexicalRules.flatMap(expandLexRule)
+function parseLexInput(lexInput: string): string[] {
+  const keywords = lexInput
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith(';'))
+  const expanded = keywords.length > 0
+    ? keywords.flatMap(expandLexRule)
     : DEFAULT_LEXICAL_RULES
-  const lexRules = [...AUTO_RULES, ...expanded]
+  return [...AUTO_RULES, ...expanded]
+}
+
+export function generateGrammarRkt(ast: GrammarAST, lexInput: string): string {
+  const lexRules = parseLexInput(lexInput)
   const lexLines = lexRules.map(r => `    ${r}`).join('\n')
 
   const grammarLines = ast.rules.flatMap((rule: GrammarRule) => {

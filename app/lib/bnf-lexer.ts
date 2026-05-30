@@ -1,24 +1,5 @@
-export type TokenKind =
-  | 'NONTERMINAL'   // <name>
-  | 'TERMINAL'      // "..." or '...'
-  | 'PRODUCES'      // ::=
-  | 'ALT'           // |
-  | 'LPAREN'        // (
-  | 'RPAREN'        // )
-  | 'STAR'          // *
-  | 'PLUS'          // +
-  | 'QUESTION'      // ?
-  | 'ARROW'         // =>
-  | 'IDENT'         // bare word (variant names or unquoted non-terminals)
-  | 'LEX_DIRECTIVE' // %lex (raw SLLGEN lexical rule)
-  | 'EOF'
-
-export interface Token {
-  kind: TokenKind
-  value: string
-  line: number
-  col: number
-}
+import type { TokenKind, Token } from '@/app/types/bnf'
+export type { TokenKind, Token }
 
 export class LexError extends Error {
   constructor(message: string, public line: number, public col: number) {
@@ -102,15 +83,18 @@ export function tokenize(input: string): Token[] {
     if (ch === '|') { push('ALT', ch); i++; continue }
     if (ch === '(') { push('LPAREN', ch); i++; continue }
     if (ch === ')') { push('RPAREN', ch); i++; continue }
+    if (ch === '[') { push('LBRACKET', ch); i++; continue }
+    if (ch === ']') { push('RBRACKET', ch); i++; continue }
     if (ch === '*') { push('STAR', ch); i++; continue }
     if (ch === '+') { push('PLUS', ch); i++; continue }
     if (ch === '?') { push('QUESTION', ch); i++; continue }
 
     // Bare identifier (variant names, or unquoted keywords/primitives)
+    // Includes ? and - so names like empty?-prim are one token
     if (/[a-zA-Z_]/.test(ch)) {
       const startCol = col()
       let value = ''
-      while (i < input.length && /[a-zA-Z0-9_-]/.test(input[i])) value += input[i++]
+      while (i < input.length && /[a-zA-Z0-9_\-?]/.test(input[i])) value += input[i++]
       tokens.push({ kind: 'IDENT', value, line, col: startCol })
       continue
     }

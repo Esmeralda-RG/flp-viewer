@@ -1,29 +1,6 @@
 import { type Token, type TokenKind } from './bnf-lexer'
-
-// ---------------------------------------------------------------------------
-// AST types
-// ---------------------------------------------------------------------------
-
-export type BNFItem =
-  | { kind: 'nonterminal'; name: string }
-  | { kind: 'terminal'; value: string }
-  | { kind: 'nonterminal-rep'; name: string; op: '*' | '+' | '?' }
-  | { kind: 'group'; items: BNFItem[]; op: '*' | '+' | '?' | null }
-
-export interface Production {
-  items: BNFItem[]
-  variantName: string | null
-}
-
-export interface GrammarRule {
-  lhs: string
-  productions: Production[]
-}
-
-export interface GrammarAST {
-  lexicalRules: string[]
-  rules: GrammarRule[]
-}
+import type { BNFItem, Production, GrammarRule, GrammarAST } from '@/app/types/bnf'
+export type { BNFItem, Production, GrammarRule, GrammarAST }
 
 // ---------------------------------------------------------------------------
 // Parser
@@ -39,7 +16,7 @@ export function parse(tokens: Token[]): GrammarAST {
   let pos = 0
 
   const peek = (): Token => tokens[pos]
-  const peek2 = (): Token => tokens[pos + 1] ?? tokens[tokens.length - 1]
+  const peek2 = (): Token => tokens[pos + 1] ?? tokens.at(-1)
 
   function check(kind: TokenKind): boolean {
     return peek().kind === kind
@@ -101,6 +78,18 @@ export function parse(tokens: Token[]): GrammarAST {
       consume('RPAREN')
       const op = parseOp()
       return { kind: 'group', items, op }
+    }
+
+    // [...] es azúcar para (...)?
+    if (check('LBRACKET')) {
+      consume('LBRACKET')
+      const items: BNFItem[] = []
+      while (!check('RBRACKET') && !check('EOF')) {
+        items.push(parseItem())
+      }
+      if (!check('RBRACKET')) throw new ParseError('Se esperaba "]" para cerrar el grupo opcional', peek())
+      consume('RBRACKET')
+      return { kind: 'group', items, op: '?' }
     }
 
     throw new ParseError('Se esperaba un elemento de producción', peek())

@@ -1,21 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type { Example, ExampleFile } from '@/app/types/examples'
-
-interface MetaFile {
-  id: string
-  name: string
-  language: string
-  lockedLines?: number[]
-}
-
-interface Meta {
-  id: string
-  label: string
-  description: string
-  activeFileId: string
-  files: MetaFile[]
-}
+import type { Example, ExampleFile, Meta} from '@/app/types/examples'
 
 export async function loadExamples(): Promise<Example[]> {
   const examplesDir = path.join(process.cwd(), 'examples')

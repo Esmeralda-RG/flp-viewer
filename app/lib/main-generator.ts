@@ -104,12 +104,16 @@ function fnName(kind: RuleKind, lhs: string): string {
   return `eval-${sym(lhs)}`
 }
 
-// ─── builder ──────────────────────────────────────────────────────────────────
-
-export interface MainGeneratorResult {
-  content: string
-  lockedLines: number[]
+function fnComment(kind: RuleKind, fn: string, lhs: string): string {
+  if (kind === 'program') return `; ${fn}: <${lhs}> -> valor`
+  if (kind === 'primitive') return `; ${fn}: <${lhs}> <args> -> valor`
+  return `; ${fn}: <${lhs}> <environment> -> valor`
 }
+
+import type { MainGeneratorResult } from '@/app/types/grammar'
+export type { MainGeneratorResult }
+
+// ─── builder ──────────────────────────────────────────────────────────────────
 
 export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   const out: { text: string; locked: boolean }[] = []
@@ -121,25 +125,26 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   L('#lang eopl')
   L('(provide (all-defined-out))')
   L('')
-  L(';;; ============================================================')
-  L(';;; main.rkt — Generado por FLP Viewer')
-  L(';;; Universidad del Valle — Intérprete Educativo')
-  L(';;; Completa cada TODO con tu implementación')
-  L(';;; ============================================================')
-  L('')
   L('(require "grammar.rkt")')
   L('(require "environment.rkt")')
   L('(require "utils.rkt")')
   L('')
   L('(sllgen:make-define-datatypes lexical-spec grammar)')
   L('')
+  L('(define show-the-datatypes')
+  L('  (lambda () (sllgen:list-define-datatypes lexical-spec grammar)))')
+  L('')
+  L('; Front-end: análisis léxico (scanner) y sintáctico (parser)')
   L('(define scan&parse')
   L('  (sllgen:make-string-parser lexical-spec grammar))')
   L('')
+  L('; Intérprete: front-end + evaluación + señal de lectura')
   L('(define interpreter')
   L('  (sllgen:make-rep-loop "--> "')
   L('    (lambda (pgm) (eval-program pgm))')
-  L('    (sllgen:make-stream-parser lexical-spec grammar)))')
+  L('    (sllgen:make-stream-parser')
+  L('      lexical-spec')
+  L('      grammar)))')
   L('')
 
   // ── eval / apply functions per rule ──────────────────────────────────────
@@ -150,10 +155,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
     const lparams = lambdaParams(kind, lhs)
     const subjectParam = lparams.split(' ')[0]
 
-    L(`;;; ============================================================`)
-    L(`;;; ${fn}`)
-    L(`;;; ============================================================`)
-    L('')
+    L(fnComment(kind, fn, lhs))
     L(`(define ${fn}`)
     L(`  (lambda (${lparams})`)
     L(`    (cases ${lhs} ${subjectParam}`)
@@ -165,16 +167,22 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
       const fieldStr = fields.length > 0 ? fields.join(' ') : ''
 
       L(`      (${variant} (${fieldStr})`)
-      U(`        ;; TODO: implement ${variant}`)
-      U(`        (error "TODO: implement ${variant}"))`)
+      if (kind === 'program' && fields.length > 0) {
+        const bodyField = fields.at(-1)
+        L(`        (eval-expression ${bodyField} (init-env)))`)
+      } else {
+        U(`        ;; TODO: implement ${variant}`)
+        U(`        (error "TODO: implement ${variant}"))`)
+      }
     }
 
     L(`      )))`)
     L('')
   }
 
-  // Remove trailing blank line
+  // Remove trailing blank line then add commented interpreter call
   while (out.length > 0 && out.at(-1)?.text === '') out.pop()
+  out.push({ text: '', locked: true }, { text: '; (interpreter) ; descomentar para iniciar el REPL', locked: true })
 
   const lines = out.map((l) => l.text)
   const lockedLines: number[] = []

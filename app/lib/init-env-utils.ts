@@ -1,7 +1,5 @@
-export interface InitBinding {
-  name: string
-  value: string
-}
+import type { InitBinding } from '@/app/types/grammar'
+export type { InitBinding }
 
 export function inferType(value: string): string {
   if (/^-?\d+(\.\d+)?$/.test(value)) return 'number'
