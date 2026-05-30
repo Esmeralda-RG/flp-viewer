@@ -11,10 +11,6 @@
 (define scan&parse
   (sllgen:make-string-parser lexical-spec grammar))
 
-; Uso interneo para depurar el front-end
-(define stream-parser
-  (sllgen:make-stream-parser lexical-spec grammar))
-
 ; Define stream-parser como efecto secundario de sllgen:make-rep-loop
 (define interpreter
   (sllgen:make-rep-loop "--> "

@@ -80,22 +80,3 @@
      '(x y z)
      '(1 2 3)
      (empty-env))))
-
-;; ──── FLP-VIEWER-TRACKING-START ────────────────────────────────────
-;; Tracking de ambientes para FLP Viewer (eliminado al descargar)
-(define _env-log '())
-(define (reset-env-log!) (set! _env-log '()))
-(define (env-log) _env-log)
-(define (_env->frames e)
-  (cases environment e
-    (empty-env-record () '())
-    (extended-env-record (syms vec inner-env)
-      (cons (map cons syms (vector->list vec))
-            (_env->frames inner-env)))))
-(define _orig-extend-env extend-env)
-(set! extend-env
-  (lambda (syms vals env)
-    (let ([new-env (_orig-extend-env syms vals env)])
-      (set! _env-log (cons (list 'extend (_env->frames new-env)) _env-log))
-      new-env)))
-;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────
