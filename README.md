@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# FLP Viewer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Playground educativo para el curso de **Fundamentos de Lenguajes de Programación** de la Universidad del Valle. Permite a los estudiantes escribir intérpretes en Racket/EOPL, visualizar el AST generado y explorar la evolución del ambiente de ejecución en tiempo real.
 
-Currently, two official plugins are available:
+> Proyecto de tesis de grado — Ingeniería de Sistemas, Universidad del Valle.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ¿Qué hace?
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+FLP Viewer actúa como entorno de desarrollo integrado orientado a la pedagogía de intérpretes:
 
-## Expanding the ESLint configuration
+- **Editor multi-archivo** con Monaco Editor: `main.rkt`, `grammar.rkt`, `environment.rkt`, `utils.rkt`, con líneas bloqueadas para el scaffolding generado.
+- **Generador BNF → EOPL/SLLGEN**: el estudiante escribe su gramática en notación BNF y la herramienta genera automáticamente `grammar.rkt`, `main.rkt` (con stubs TODO por completar) y `environment.rkt`.
+- **Visualizador de AST**: árbol interactivo del último programa evaluado.
+- **Panel de ambiente**: muestra los frames del ambiente de ejecución frame a frame, con soporte para editar el `init-env` desde la interfaz.
+- **Consola de ejecución**: envía expresiones al intérprete y muestra los resultados (o los errores TODO pendientes).
+- **Ejemplos precargados**: incluye plantillas EOPL completas para referencia.
+- **Descarga como ZIP**: genera el proyecto listo para usar en DrRacket, eliminando el código de instrumentación.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Capa | Tecnología |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4, TypeScript 5 |
+| Editor | Monaco Editor (`@monaco-editor/react` v4.7, cargado con `ssr: false`) |
+| Layout | `react-resizable-panels` v4 (`Group` / `Separator`) |
+| Intérprete | Racket (proceso externo, vía `execFile`) |
+| Empaquetado | JSZip (descarga del proyecto) |
+| Package manager | pnpm |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## Estrategia de integración con Racket
+
+El intérprete no corre en el servidor Next.js — se delega a un proceso Racket externo por cada ejecución:
+
+```
+Navegador
+   │  POST /api/run  { files[], testInput }
+   ▼
+API Route (Next.js)
+   │  1. Escribe los archivos del proyecto en un directorio temporal
+   │  2. Inyecta _runner.rkt (generado en tiempo de ejecución)
+   │  3. Lanza:  racket _runner.rkt "<expresión>"
+   ▼
+Proceso Racket
+   │  • _runner.rkt requiere grammar.rkt, environment.rkt, utils.rkt, main.rkt
+   │  • Parsea la expresión con el stream-parser del estudiante
+   │  • Llama eval-program en un with-handlers (captura errores TODO)
+   │  • Serializa AST + resultado + frames de ambiente a JSON
+   ▼
+API Route
+   │  Lee stdout, limpia stderr, devuelve { steps[], stderr }
+   ▼
+Navegador
+   Actualiza AST viewer, panel de ambiente y consola
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Instrumentación del ambiente
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`environment.rkt` incluye un bloque de tracking (marcado con `FLP-VIEWER-TRACKING-START/END`) que monkey-patchea `extend-env` al iniciarse el módulo. Cada llamada a `extend-env` registra un snapshot del ambiente en `_env-log`. El runner lee ese log al finalizar cada evaluación y lo incluye en el JSON de respuesta. **Este bloque se elimina automáticamente al descargar el ZIP**, dejando el archivo limpio para uso en DrRacket.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## Instalación y ejecución local
+
+### Requisitos
+
+- Node.js ≥ 20 y pnpm
+- [Racket](https://racket-lang.org/) instalado (por defecto se busca en `/Applications/Racket v9.1/bin/racket`)
+
+### Pasos
+
+```bash
+# Clonar e instalar dependencias
+pnpm install
+
+# (Opcional) Indicar la ruta al binario de Racket si es diferente
+export RACKET_BIN="/usr/local/bin/racket"
+
+# Iniciar el servidor de desarrollo
+pnpm dev
+```
+
+Abrir [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Estructura del proyecto
+
+```
+app/
+  api/run/          → API Route que ejecuta Racket
+  components/       → Playground, Editor, AST, Ambiente, Consola, Modales
+  lib/              → Generadores (BNF, grammar.rkt, main.rkt, environment.rkt)
+  services/         → Cliente HTTP hacia /api/run
+  types/            → Tipos TypeScript compartidos
+examples/           → Plantillas de ejemplo (eopl-template, hola-mundo)
 ```
