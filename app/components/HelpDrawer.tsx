@@ -5,8 +5,6 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { HelpSection } from '@/app/types/help'
 
-// ── Markdown styles ───────────────────────────────────────────────────────────
-
 const mdComponents = {
   h1: ({ children }: { children?: React.ReactNode }) => (
     <h1 className="text-lg font-bold text-zinc-100 mb-3 mt-1 pb-2 border-b border-zinc-700/60">{children}</h1>
@@ -83,8 +81,6 @@ const mdComponents = {
   hr: () => <hr className="border-zinc-700/50 my-4" />,
 }
 
-// ── Drawer ────────────────────────────────────────────────────────────────────
-
 interface HelpDrawerProps {
   open: boolean
   onClose: () => void
@@ -105,12 +101,11 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
     }
   }, [open])
 
-  // Reset search when drawer closes
   useEffect(() => { if (!open) setQuery('') }, [open])
 
   const q = query.trim().toLowerCase()
 
-  // Auto-select first result when search query changes
+
   useEffect(() => {
     if (!q) return
     const matches = sections.filter(s =>

@@ -3,7 +3,7 @@ import type { BNFItem, Production, GrammarRule, GrammarAST } from '@/app/types/b
 export type { BNFItem, Production, GrammarRule, GrammarAST }
 
 // ---------------------------------------------------------------------------
-// Parser
+// Analizador sintáctico
 // ---------------------------------------------------------------------------
 
 export class ParseError extends Error {
@@ -40,7 +40,7 @@ export function parse(tokens: Token[]): GrammarAST {
   function isProductionEnd(): boolean {
     const k = peek().kind
     if (k === 'EOF' || k === 'ALT' || k === 'ARROW') return true
-    // Start of a new rule: NONTERMINAL ::= or IDENT ::=
+    // Inicio de nueva regla: NO-TERMINAL ::= o IDENT ::=
     if ((k === 'NONTERMINAL' || k === 'IDENT') && peek2().kind === 'PRODUCES') return true
     return false
   }
@@ -54,7 +54,7 @@ export function parse(tokens: Token[]): GrammarAST {
     }
 
     if (check('IDENT')) {
-      // Treat bare identifiers as non-terminal references
+      // Los identificadores simples se tratan como referencias a no-terminales
       const name = consume('IDENT').value
       const op = parseOp()
       if (op) return { kind: 'nonterminal-rep', name, op }
@@ -121,7 +121,7 @@ export function parse(tokens: Token[]): GrammarAST {
   }
 
   function parseRule(): GrammarRule {
-    // Accept both <nonterminal> ::= and bare-ident ::=
+    // Acepta tanto <no-terminal> ::= como ident-simple ::=
     let lhs: string
     if (check('NONTERMINAL')) lhs = consume('NONTERMINAL').value
     else if (check('IDENT')) lhs = consume('IDENT').value

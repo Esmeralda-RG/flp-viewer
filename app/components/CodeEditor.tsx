@@ -29,7 +29,6 @@ export default function CodeEditor({
     const model = editor.getModel()
     if (!model) { editor.focus(); return }
 
-    // lineMap: current line number → expected content (shifts as content changes)
     const lineMap = new Map<number, string>()
     if (lockedLines?.length) {
       for (const n of lockedLines) {

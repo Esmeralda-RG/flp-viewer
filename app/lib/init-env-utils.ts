@@ -29,7 +29,7 @@ export function generateInitEnvDef(bindings: InitBinding[]): string {
 
 export function updateInitEnvInContent(content: string, bindings: InitBinding[]): string {
   const newDef = generateInitEnvDef(bindings)
-  // Match all closing parens after (empty-env) — greedy so captures ))), ))) or ))))
+  // Captura todos los paréntesis de cierre después de (empty-env) — greedy para ))), ))) o ))))
   return content.replace(
     /\(define\s+init-env[\s\S]*?\(empty-env\)(\s*\))+/,
     newDef

@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 import type { ASTNode } from '@/app/types/ast'
 export type { ASTNode }
 
-// ── Normalize — strip SLLGEN noise, extract leaf values ───────────────────────
 
 function normalize(node: ASTNode): ASTNode {
   const kids = (node.children ?? [])
@@ -27,8 +24,6 @@ function normalize(node: ASTNode): ASTNode {
 
   return { ...node, children: kids.length ? kids : undefined }
 }
-
-// ── Node category → visual style ──────────────────────────────────────────────
 
 type Cat = 'program' | 'decl' | 'cond' | 'call' | 'func' | 'var' | 'num' | 'bool' | 'op' | 'other'
 
@@ -59,15 +54,11 @@ const CAT: Record<Cat, { border: string; icon: string; ic: string; tc: string; b
   other:   { border: '#3b82f6', icon: '·',  ic: '#60a5fa', tc: '#93c5fd', bg: '#172554',  bgHover: '#1e3a8a' },
 }
 
-// ── Value display ─────────────────────────────────────────────────────────────
-
 function renderValue(value: string | number | boolean): string {
   if (typeof value === 'string') return `"${value}"`
   if (typeof value === 'boolean') return value ? '#t' : '#f'
   return String(value)
 }
-
-// ── Tree node ─────────────────────────────────────────────────────────────────
 
 const ROW_H = 30
 const GUIDE_W = 20
@@ -199,8 +190,6 @@ function TreeNode({ node, depth, isLast, guides, initialOpen }: Readonly<NodePro
     </div>
   )
 }
-
-// ── Public component ──────────────────────────────────────────────────────────
 
 interface ASTViewerProps {
   ast: ASTNode | null

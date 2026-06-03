@@ -18,10 +18,6 @@ import { generateUtilsRkt } from '@/app/lib/utils-generator'
 import { parseInitEnv, updateInitEnvInContent, type InitBinding } from '@/app/lib/init-env-utils'
 import type { HelpSection } from '@/app/types/help'
 
-// ---------------------------------------------------------------------------
-// Initial state
-// ---------------------------------------------------------------------------
-
 const INITIAL_CODE = `; intérprete simple — escribe tu código aquí
 `
 
@@ -42,10 +38,6 @@ const INITIAL_FILES: EditorFile[] = [
     language: 'scheme',
   },
 ]
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function ResizeBar({ className }: Readonly<{ className?: string }>) {
   return (
@@ -113,10 +105,6 @@ function createInitEnvModalElement(
     />
   )
 }
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 
 export default function PlaygroundLayout({ examples, helpSections }: Readonly<{ examples: Example[]; helpSections: HelpSection[] }>) {
   const defaultExample = examples.find((e) => e.id === 'hola-mundo')

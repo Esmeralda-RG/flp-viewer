@@ -3,10 +3,10 @@ import type { EnvFrame, Binding } from '@/app/types/environment'
 import type { EditorFileLike, StepResult, TraceResult } from '@/app/types/racket'
 export type { EditorFileLike, StepResult, TraceResult }
 
-// Re-export for legacy consumers
+// Re-exportar para compatibilidad
 export type { ASTNode, EnvFrame, Binding }
 
-// ── AST conversion ────────────────────────────────────────────────────────────
+// ── Conversión del AST ────────────────────────────────────────────────────────
 
 function toASTNode(v: unknown): ASTNode | null {
   if (v === null || v === undefined) return null
@@ -35,7 +35,7 @@ function toASTNode(v: unknown): ASTNode | null {
   return { type: String(v) }
 }
 
-// ── Environment conversion ────────────────────────────────────────────────────
+// ── Conversión de ambientes ───────────────────────────────────────────────────
 
 export function valueToString(v: unknown): string {
   if (v === null || v === undefined) return 'null'
@@ -97,7 +97,7 @@ function parseStep(raw: unknown): StepResult {
   }
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── API pública ───────────────────────────────────────────────────────────────
 
 export async function runTrace(
   files: EditorFileLike[],

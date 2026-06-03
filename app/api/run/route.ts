@@ -27,7 +27,7 @@ interface FileEntry {
   content: string
 }
 
-// Strip Racket's verbose "context...: / location..." section from error output
+// Elimina la sección verbose "context...: / location..." del stderr de Racket
 function cleanStderr(raw: string): string {
   const lines = raw.split('\n')
   const kept: string[] = []
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       const parsed = JSON.parse(stdout.trim())
       if (Array.isArray(parsed)) steps = parsed
     } catch {
-      // not JSON — plain racket output
+      // no es JSON — salida de texto plano de Racket
     }
 
     return Response.json({

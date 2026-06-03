@@ -5,8 +5,6 @@ import { useRef, useEffect, useCallback, useState } from 'react'
 import type { Binding, EnvFrame } from '@/app/types/environment'
 export type { Binding, EnvFrame }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 const CARD_W = 230
 const CARD_H_HEADER = 34
 const CARD_H_ROW = 22
@@ -31,8 +29,6 @@ function cardHeight(frame: EnvFrame): number {
   const body = totalBindings * CARD_H_ROW + separators * CARD_H_SEP
   return CARD_H_HEADER + CARD_PAD_V + body + CARD_PAD_V
 }
-
-// ── Pan / zoom (zoom to cursor) ───────────────────────────────────────────────
 
 interface Transform { x: number; y: number; k: number }
 
@@ -98,8 +94,6 @@ function usePanZoom(ref: React.RefObject<HTMLDivElement | null>) {
   return { t, reset }
 }
 
-// ── SVG card ──────────────────────────────────────────────────────────────────
-
 function FrameCard({ frame, x, y }: Readonly<{ frame: EnvFrame; x: number; y: number }>) {
   const h = cardHeight(frame)
   let cursor = CARD_H_HEADER + CARD_PAD_V
@@ -155,8 +149,6 @@ function FrameCard({ frame, x, y }: Readonly<{ frame: EnvFrame; x: number; y: nu
   )
 }
 
-// ── Arrow ─────────────────────────────────────────────────────────────────────
-
 function Arrow({ x1, y1, x2, y2 }: Readonly<{ x1: number; y1: number; x2: number; y2: number }>) {
   const cx = (x1 + x2) / 2
   return (
@@ -168,7 +160,6 @@ function Arrow({ x1, y1, x2, y2 }: Readonly<{ x1: number; y1: number; x2: number
   )
 }
 
-// ── Panel ─────────────────────────────────────────────────────────────────────
 
 interface EnvironmentPanelProps {
   frames: EnvFrame[]

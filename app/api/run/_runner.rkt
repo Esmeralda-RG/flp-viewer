@@ -22,7 +22,7 @@
     [else (format "~a" v)]))
 
 (define (frame->json frame)
-  ;; JSON hash keys must be symbols in Racket's json library
+  ;; Las claves del hash JSON deben ser símbolos en la librería json de Racket
   (for/hasheq ([binding frame])
     (values (car binding) (json-value (cdr binding)))))
 

@@ -19,13 +19,13 @@ export function tokenize(input: string): Token[] {
   while (i < input.length) {
     const ch = input[i]
 
-    // Newline — track line numbers
+    // Salto de línea — actualizar número de línea
     if (ch === '\n') { line++; lineStart = ++i; continue }
 
-    // Whitespace
+    // Espacios en blanco
     if (ch === ' ' || ch === '\t' || ch === '\r') { i++; continue }
 
-    // %lex directive — rest of line is a raw SLLGEN lexical rule
+    // Directiva %lex — el resto de la línea es una regla léxica SLLGEN directa
     if (ch === '%' && input.slice(i, i + 4) === '%lex') {
       const startCol = col()
       i += 4
@@ -36,13 +36,13 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
-    // Line comments: ; // #
+    // Comentarios de línea: ; // #
     if (ch === ';' || (ch === '/' && input[i + 1] === '/') || ch === '#') {
       while (i < input.length && input[i] !== '\n') i++
       continue
     }
 
-    // <nonterminal>
+    // <no-terminal>
     if (ch === '<') {
       const start = i++
       let name = ''
@@ -53,7 +53,7 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
-    // Quoted terminal "..." or '...'
+    // Terminal entre comillas "..." o '...'
     if (ch === '"' || ch === "'") {
       const quote = ch
       const startCol = col()
@@ -64,7 +64,7 @@ export function tokenize(input: string): Token[] {
         value += input[i++]
       }
       if (i >= input.length) throw new LexError(`Terminal sin cerrar (falta ${quote})`, line, startCol)
-      i++ // closing quote
+      i++ // comilla de cierre
       tokens.push({ kind: 'TERMINAL', value, line, col: startCol })
       continue
     }
@@ -79,7 +79,7 @@ export function tokenize(input: string): Token[] {
       push('ARROW', '=>'); i += 2; continue
     }
 
-    // Single-char tokens
+    // Tokens de un solo carácter
     if (ch === '|') { push('ALT', ch); i++; continue }
     if (ch === '(') { push('LPAREN', ch); i++; continue }
     if (ch === ')') { push('RPAREN', ch); i++; continue }
@@ -89,8 +89,8 @@ export function tokenize(input: string): Token[] {
     if (ch === '+') { push('PLUS', ch); i++; continue }
     if (ch === '?') { push('QUESTION', ch); i++; continue }
 
-    // Bare identifier (variant names, or unquoted keywords/primitives)
-    // Includes ? and - so names like empty?-prim are one token
+    // Identificador simple (nombres de variante o keywords sin comillas)
+    // Incluye ? y - para que nombres como empty?-prim sean un solo token
     if (/[a-zA-Z_]/.test(ch)) {
       const startCol = col()
       let value = ''
@@ -99,7 +99,7 @@ export function tokenize(input: string): Token[] {
       continue
     }
 
-    // Skip unknown characters silently
+    // Ignorar caracteres desconocidos
     i++
   }
 

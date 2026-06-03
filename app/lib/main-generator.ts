@@ -1,6 +1,6 @@
 import type { GrammarAST, GrammarRule, Production, BNFItem } from './bnf-parser'
 
-// ─── helpers (mirror eopl-generator) ─────────────────────────────────────────
+// ─── auxiliares ───────────────────────────────────────────────────────────────
 
 function sym(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '')
@@ -8,7 +8,7 @@ function sym(name: string): string {
 
 function autoVariantName(lhsSym: string, index: number, prod: Production): string {
   if (prod.variantName) return prod.variantName
-  // EOPL convention: first production of program rule → a-program
+  // Convención EOPL: primera producción de program → a-program
   if (lhsSym === 'program' && index === 0) return 'a-program'
   const keyword = prod.items
     .filter((i): i is Extract<BNFItem, { kind: 'terminal' }> => i.kind === 'terminal')
@@ -18,7 +18,7 @@ function autoVariantName(lhsSym: string, index: number, prod: Production): strin
   return index === 0 ? `${lhsSym}-exp` : `${lhsSym}-${index + 1}-exp`
 }
 
-// ─── field name inference ─────────────────────────────────────────────────────
+// ─── inferencia de nombres de campo ───────────────────────────────────────────
 
 const FIELD_BASE: Record<string, string> = {
   number: 'n', identifier: 'id', string: 's', boolean: 'b',
@@ -68,7 +68,7 @@ function collectFields(items: BNFItem[]): string[] {
   return fields
 }
 
-// ─── rule classification ──────────────────────────────────────────────────────
+// ─── clasificación de reglas ──────────────────────────────────────────────────
 
 type RuleKind = 'program' | 'expression' | 'primitive' | 'other'
 
@@ -113,7 +113,7 @@ function fnComment(kind: RuleKind, fn: string, lhs: string): string {
 import type { MainGeneratorResult } from '@/app/types/grammar'
 export type { MainGeneratorResult }
 
-// ─── builder ──────────────────────────────────────────────────────────────────
+// ─── generador ────────────────────────────────────────────────────────────────
 
 export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   const out: { text: string; locked: boolean }[] = []
@@ -121,7 +121,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   function L(text: string) { out.push({ text, locked: true }) }
   function U(text: string) { out.push({ text, locked: false }) }
 
-  // ── boilerplate header ────────────────────────────────────────────────────
+  // ── encabezado base ───────────────────────────────────────────────────────
   L('#lang eopl')
   L('(provide (all-defined-out))')
   L('')
@@ -147,7 +147,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   L('      grammar)))')
   L('')
 
-  // ── eval / apply functions per rule ──────────────────────────────────────
+  // ── funciones eval/apply por regla ────────────────────────────────────────
   for (const rule of ast.rules) {
     const lhs = sym(rule.lhs)
     const kind = ruleKind(rule)
@@ -171,8 +171,8 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
         const bodyField = fields.at(-1)
         L(`        (eval-expression ${bodyField} (init-env)))`)
       } else {
-        U(`        ;; TODO: implement ${variant}`)
-        U(`        (error "TODO: implement ${variant}"))`)
+        U(`        ;; TODO: implementar ${variant}`)
+        U(`        (error "TODO: implementar ${variant}"))`)
       }
     }
 
@@ -180,7 +180,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
     L('')
   }
 
-  // Remove trailing blank line then add commented interpreter call
+  // Eliminar línea en blanco final y añadir llamada al intérprete comentada
   while (out.length > 0 && out.at(-1)?.text === '') out.pop()
   out.push({ text: '', locked: true }, { text: '; (interpreter) ; descomentar para iniciar el REPL', locked: true })
 

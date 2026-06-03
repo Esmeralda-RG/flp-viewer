@@ -125,7 +125,6 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
   const [hasGrammar, setHasGrammar]     = useState(false)
   const [canGenerate, setCanGenerate]   = useState(false)
 
-  // Debounced pipeline execution for live preview
   useEffect(() => {
     const timer = setTimeout(() => {
       const result = runPipeline(lexInput, grammarInput)
@@ -137,7 +136,6 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
     return () => clearTimeout(timer)
   }, [lexInput, grammarInput])
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     globalThis.addEventListener('keydown', handler)

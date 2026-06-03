@@ -12,8 +12,8 @@ const AUTO_RULES = [
 // Palabras clave que los estudiantes pueden usar en %lex
 const LEX_KEYWORDS: Record<string, string[]> = {
   number: [
-    '(number (digit+) number)',
-    '(number ("-" digit+) number)',
+    '(number (digit (arbno digit)) number)',
+    '(number ("-" digit (arbno digit)) number)',
   ],
   float: [
     '(float (digit (arbno digit) "." digit (arbno digit)) number)',
