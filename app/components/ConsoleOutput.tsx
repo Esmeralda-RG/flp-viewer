@@ -47,6 +47,9 @@ export default function ConsoleOutput({
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [prevSession, setPrevSession] = useState(false)
+  const [history, setHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [draft, setDraft] = useState('')
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -69,7 +72,47 @@ export default function ConsoleOutput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (sessionActive && !running && inputValue.trim()) onSubmit()
+      if (sessionActive && !running && inputValue.trim()) {
+        const val = inputValue.trim()
+        setHistory(prev => prev.at(-1) === val ? prev : [...prev, val])
+        setHistoryIndex(-1)
+        setDraft('')
+        onSubmit()
+      }
+      return
+    }
+
+    if (e.key === 'ArrowUp') {
+      const ta = e.currentTarget
+      if (ta.value.slice(0, ta.selectionStart ?? 0).includes('\n')) return
+      if (history.length === 0) return
+      e.preventDefault()
+      if (historyIndex === -1) {
+        setDraft(inputValue)
+        const idx = history.length - 1
+        setHistoryIndex(idx)
+        onInputChange(history[idx])
+      } else if (historyIndex > 0) {
+        const idx = historyIndex - 1
+        setHistoryIndex(idx)
+        onInputChange(history[idx])
+      }
+      return
+    }
+
+    if (e.key === 'ArrowDown') {
+      if (historyIndex === -1) return
+      const ta = e.currentTarget
+      if (ta.value.slice(ta.selectionStart ?? ta.value.length).includes('\n')) return
+      e.preventDefault()
+      if (historyIndex >= history.length - 1) {
+        setHistoryIndex(-1)
+        onInputChange(draft)
+      } else {
+        const idx = historyIndex + 1
+        setHistoryIndex(idx)
+        onInputChange(history[idx])
+      }
     }
   }
 
