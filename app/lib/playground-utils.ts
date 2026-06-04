@@ -51,7 +51,9 @@ export async function downloadZip(files: EditorFile[], zipName = 'flp-project.zi
   const zip = new JSZip()
   for (const f of files) {
     const prepared = prepareForDownload(f)
-    zip.file(prepared.name, prepared.content, { date: new Date() })
+    const _yesterday = new Date()
+    _yesterday.setDate(_yesterday.getDate() - 1)
+    zip.file(prepared.name, prepared.content, { date: _yesterday })
   }
   const blob = await zip.generateAsync({ type: 'blob' })
   const url = URL.createObjectURL(blob)

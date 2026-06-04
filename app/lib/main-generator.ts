@@ -172,7 +172,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
         L(`        (eval-expression ${bodyField} (init-env)))`)
       } else {
         U(`        ;; TODO: implementar ${variant}`)
-        U(`        (error "TODO: implementar ${variant}"))`)
+        U(`        (eopl:error "TODO: implementar ${variant}"))`)
       }
     }
 
