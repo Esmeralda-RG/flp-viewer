@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { Panel, Group, Separator } from 'react-resizable-panels'
-import JSZip from 'jszip'
 import Navbar from './Navbar'
 import type { Example } from '@/app/types/examples'
 import EditorPanel, { type EditorFile } from './EditorPanel'
@@ -14,30 +13,9 @@ import WelcomeModal from './WelcomeModal'
 import InitEnvModal from './InitEnvModal'
 import HelpDrawer from './HelpDrawer'
 import { runTrace, type StepResult } from '@/app/services/racket'
-import { generateUtilsRkt } from '@/app/lib/utils-generator'
 import { parseInitEnv, updateInitEnvInContent, type InitBinding } from '@/app/lib/init-env-utils'
+import { INITIAL_FILES, downloadZip, upsertFile } from '@/app/lib/playground-utils'
 import type { HelpSection } from '@/app/types/help'
-
-const INITIAL_CODE = `; intérprete simple — escribe tu código aquí
-`
-
-const INITIAL_FILES: EditorFile[] = [
-  {
-    id: 'main',
-    revision: 0,
-    name: 'main.rkt',
-    content: INITIAL_CODE,
-    language: 'scheme',
-    lockedLines: [],
-  },
-  {
-    id: 'utils',
-    revision: 0,
-    name: 'utils.rkt',
-    content: generateUtilsRkt(),
-    language: 'scheme',
-  },
-]
 
 function ResizeBar({ className }: Readonly<{ className?: string }>) {
   return (
@@ -48,45 +26,6 @@ function ResizeBar({ className }: Readonly<{ className?: string }>) {
       ].join(' ')}
     />
   )
-}
-
-function prepareForDownload(file: EditorFile): EditorFile {
-  if (file.name !== 'main.rkt') return file
-  const content = file.content.replace(/^; \(interpreter\)(.*)$/m, '(interpreter)$1')
-  return { ...file, content }
-}
-
-async function downloadZip(files: EditorFile[], zipName = 'flp-project.zip') {
-  const zip = new JSZip()
-  for (const f of files) {
-    const prepared = prepareForDownload(f)
-    zip.file(prepared.name, prepared.content)
-  }
-  const blob = await zip.generateAsync({ type: 'blob' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = zipName
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-function upsertFile(
-  prev: EditorFile[],
-  id: string,
-  name: string,
-  content: string,
-  language: string,
-  lockedLines?: number[],
-): EditorFile[] {
-  const next = [...prev]
-  const idx = next.findIndex((f) => f.id === id)
-  if (idx >= 0) {
-    next[idx] = { ...next[idx], revision: next[idx].revision + 1, content, name, lockedLines }
-  } else {
-    next.push({ id, revision: 0, name, content, language, lockedLines })
-  }
-  return next
 }
 
 function createInitEnvModalElement(

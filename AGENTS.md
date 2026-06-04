@@ -23,6 +23,10 @@ app/types/
   racket.ts       → EditorFileLike, StepResult, TraceResult
 ```
 
+## Logic in components
+
+Keep components focused on rendering and state. Pure functions, constants, and helpers that do not reference React or component state must live in `app/lib/`, not inside the component file. Import them from there.
+
 ## Comments in components
 
 Do not use JSX comments as structural labels (`{/* Header */}`, `{/* Backdrop */}`, `{/* Body */}`). These describe obvious structure and add noise. Only write a comment when it explains a non-obvious decision, constraint, or workaround — not what the code does.
