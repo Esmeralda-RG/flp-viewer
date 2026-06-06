@@ -122,7 +122,11 @@ export default function PlaygroundLayout({ examples, helpSections }: Readonly<{ 
         } else {
           result.steps.forEach((step) => {
             if (step.output !== null && step.output !== '"void"' && step.output !== 'null') {
-              addLog(step.output, 'output')
+              if (step.output.startsWith('"✕ ') && step.output.endsWith('"')) {
+                addLog(step.output.slice(3, -1), 'error')
+              } else {
+                addLog(step.output, 'output')
+              }
             } else {
               addLog('void', 'info')
             }
