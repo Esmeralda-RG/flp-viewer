@@ -42,6 +42,6 @@ export async function loadExamples(): Promise<Example[]> {
   }
 
   return examples
-    .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
+    .toSorted((a, b) => a.order - b.order || a.label.localeCompare(b.label))
     .map(({ order: _order, ...example }) => example)
 }
