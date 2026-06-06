@@ -1,9 +1,9 @@
 {
-  "id": "eopl-template",
-  "label": "Intérprete EOPL (avanzado)",
-  "description": "Proyecto completo con sintaxis propia (estructuras, arreglos, match…); no usa la forma tradicional de EOPL",
+  "id": "ambientes",
+  "label": "Ambientes",
+  "description": "Ligadura de variables, ambiente inicial y shadowing sobre el lenguaje LET",
   "activeFileId": "main",
-  "order": 90,
+  "order": 3,
   "files": [
     { "id": "main",            "name": "main.rkt",        "language": "scheme" },
     { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },

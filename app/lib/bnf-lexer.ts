@@ -25,17 +25,6 @@ export function tokenize(input: string): Token[] {
     // Espacios en blanco
     if (ch === ' ' || ch === '\t' || ch === '\r') { i++; continue }
 
-    // Directiva %lex — el resto de la línea es una regla léxica SLLGEN directa
-    if (ch === '%' && input.slice(i, i + 4) === '%lex') {
-      const startCol = col()
-      i += 4
-      while (i < input.length && (input[i] === ' ' || input[i] === '\t')) i++
-      let raw = ''
-      while (i < input.length && input[i] !== '\n') raw += input[i++]
-      tokens.push({ kind: 'LEX_DIRECTIVE', value: raw.trim(), line, col: startCol })
-      continue
-    }
-
     // Comentarios de línea: ; // #
     if (ch === ';' || (ch === '/' && input[i + 1] === '/') || ch === '#') {
       while (i < input.length && input[i] !== '\n') i++

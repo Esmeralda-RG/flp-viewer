@@ -1,9 +1,9 @@
 {
-  "id": "eopl-template",
-  "label": "Intérprete EOPL (avanzado)",
-  "description": "Proyecto completo con sintaxis propia (estructuras, arreglos, match…); no usa la forma tradicional de EOPL",
+  "id": "let-expresiones",
+  "label": "Lenguaje LET",
+  "description": "Intérprete mínimo de EOPL: números, resta, zero?, condicional y let",
   "activeFileId": "main",
-  "order": 90,
+  "order": 2,
   "files": [
     { "id": "main",            "name": "main.rkt",        "language": "scheme" },
     { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },

@@ -10,6 +10,7 @@ export interface Meta {
   label: string
   description: string
   activeFileId: string
+  order?: number
   files: MetaFile[]
 }
 

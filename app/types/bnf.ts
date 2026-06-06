@@ -12,7 +12,6 @@ export type TokenKind =
   | 'QUESTION'
   | 'ARROW'
   | 'IDENT'
-  | 'LEX_DIRECTIVE'
   | 'EOF'
 
 export interface Token {
@@ -39,6 +38,5 @@ export interface GrammarRule {
 }
 
 export interface GrammarAST {
-  lexicalRules: string[]
   rules: GrammarRule[]
 }

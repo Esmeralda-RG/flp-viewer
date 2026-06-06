@@ -12,9 +12,9 @@ export async function loadExamples(): Promise<Example[]> {
     return []
   }
 
-  const examples: Example[] = []
+  const examples: (Example & { order: number })[] = []
 
-  for (const entry of entries.toSorted((a, b) => a.localeCompare(b))) {
+  for (const entry of entries) {
     const exampleDir = path.join(examplesDir, entry)
     if (!fs.statSync(exampleDir).isDirectory()) continue
 
@@ -36,9 +36,12 @@ export async function loadExamples(): Promise<Example[]> {
       description: meta.description,
       code: activeFile.content,
       activeFileId: meta.activeFileId,
+      order: meta.order ?? Number.MAX_SAFE_INTEGER,
       files,
     })
   }
 
   return examples
+    .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
+    .map(({ order: _order, ...example }) => example)
 }

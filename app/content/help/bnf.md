@@ -2,11 +2,14 @@
 id: bnf
 icon: "📐"
 title: "Notación BNF"
+order: 2
 ---
 
 # Notación BNF
 
-La **Forma de Backus-Naur** (BNF) es el lenguaje con el que describes la sintaxis de tu intérprete.
+La **Forma de Backus-Naur** (BNF) es el lenguaje con el que describes la sintaxis de tu intérprete: qué expresiones son válidas y cómo se componen.
+
+> 👉 **Carga el ejemplo _Lenguaje LET_** para ver una gramática completa y pequeña en acción.
 
 ## Sintaxis básica
 
@@ -16,57 +19,50 @@ La **Forma de Backus-Naur** (BNF) es el lenguaje con el que describes la sintaxi
           | "terminal"
 ```
 
-- **`<Nombre>`** → no-terminal (referencia a otra regla)
-- **`"texto"`** → terminal (token literal)
-- **`|`** → alternativa (OR)
+- **`<Nombre>`** → no-terminal (referencia a otra regla).
+- **`"texto"`** → terminal (un símbolo literal del lenguaje).
+- **`|`** → alternativa (una u otra).
 
-## Cuantificadores
+## La gramática del Lenguaje LET
 
-| Sintaxis | Significado |
-|---|---|
-| `<X>*` | Cero o más |
-| `<X>+` | Uno o más |
-| `[<X>]` | Opcional (cero o uno) |
-
-## Ejemplo: lenguaje LET
+Este es exactamente el lenguaje que define el ejemplo cargado:
 
 ```
-<program> ::= <expr>
+<program> ::= <expression>
 
-<expr> ::= <number>                               => lit-exp
-         | <identifier>                           => var-exp
-         | "-" "(" <expr> "," <expr> ")"          => diff-exp
-         | "zero?" "(" <expr> ")"                 => zero?-exp
-         | "if" <expr> "then" <expr> "else" <expr> => if-exp
-         | "let" <identifier> "=" <expr>
-             "in" <expr>                          => let-exp
-         | "proc" "(" <identifier> ")" <expr>     => proc-exp
-         | "(" <expr> <expr> ")"                  => call-exp
+<expression> ::= <number>                                  => lit-exp
+              | <identifier>                                => var-exp
+              | "-" "(" <expression> "," <expression> ")"  => diff-exp
+              | "zero?" "(" <expression> ")"               => zero?-exp
+              | "if" <expression> "then" <expression>
+                  "else" <expression>                      => if-exp
+              | "let" <identifier> "=" <expression>
+                  "in" <expression>                        => let-exp
 ```
 
-## Nombre de variante (`=> nombre`)
+Con él puedes evaluar, por ejemplo:
 
-El nombre después de `=>` es el **constructor** que SLLGEN genera. Lo usarás en `cases` dentro de Racket:
+```
+let x = 5 in -(x, 3)        // → 2
+```
+
+## El nombre tras `=>`
+
+El nombre después de `=>` es el **constructor** del nodo del AST. Cada alternativa de la gramática se vuelve un tipo de nodo, y por eso en `main.rkt` puedes escribir:
 
 ```racket
 (cases expression exp
   (lit-exp (n) n)
   (var-exp (id) (apply-env env id))
-  ...)
+  (diff-exp (e1 e2) ...))
 ```
+
+Hay una correspondencia directa: **una regla en la gramática ↔ un caso en `eval-expression`**.
+
+## Por qué solo hay resta
+
+El Lenguaje LET no incluye suma a propósito: con `diff-exp` (resta) y `zero?` alcanza para construir cualquier otra operación, manteniendo la gramática mínima. Un número negativo, por ejemplo, se obtiene con `-(0, 5)`.
 
 ## Restricción LL(1)
 
-SLLGEN usa parsing LL(1): dos alternativas de la **misma regla** no pueden comenzar con el mismo token.
-
-**Conflicto** ❌
-```
-<expr> ::= "(" <expr> "+" <expr> ")"   ; ambas empiezan con "("
-         | "(" <expr> <expr> ")"
-```
-
-**Sin conflicto** ✅
-```
-<expr> ::= "-" "(" <expr> "," <expr> ")"   ; empieza con "-"
-         | "(" <expr> <expr> ")"            ; empieza con "("
-```
+SLLGEN usa análisis LL(1): dos alternativas de la **misma regla** no pueden empezar con el mismo token. En el Lenguaje LET cada alternativa arranca con algo distinto (`-`, `zero?`, `if`, `let`, un número o un identificador), por eso no hay conflicto.

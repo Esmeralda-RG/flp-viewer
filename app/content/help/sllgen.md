@@ -2,71 +2,73 @@
 id: sllgen
 icon: "⚙️"
 title: "SLLGEN"
+order: 3
 ---
 
 # SLLGEN
 
-SLLGEN es el generador de parsers incluido en `#lang eopl`. Convierte tu especificación BNF en funciones Racket.
+SLLGEN es el generador de analizadores incluido en `#lang eopl`. Convierte tu especificación léxica y tu gramática en funciones de Racket: un *scanner* (que parte el texto en tokens) y un *parser* (que arma el AST).
+
+> 👉 **Carga el ejemplo _Lenguaje LET_** y abre el archivo `grammar.rkt` para ver lo que se describe aquí.
 
 ## Especificación léxica
 
-Define los **tokens** que el scanner reconoce:
+Define los **tokens** que el scanner reconoce. Así está en el ejemplo:
 
 ```racket
 (define lexical-spec
-  '(
-    (whitespace (whitespace) skip)
-    (comment ("//" (arbno (not #newline))) skip)
-    (number (digit+) number)
-    (number ("-" digit+) number)
+  '((whitespace (whitespace) skip)
+    (comment ("//" (arbno (not #\newline))) skip)
     (identifier (letter (arbno (or letter digit "?"))) symbol)
-  ))
+    (number (digit (arbno digit)) number)))
 ```
 
 | Columna | Significado |
 |---|---|
-| Nombre | Identificador del token (ej. `number`) |
-| Patrón | Expresión regular con notación SLLGEN |
-| Tipo | `number`, `symbol`, `string`, `skip` |
+| Nombre | Identificador del token (ej. `number`). |
+| Patrón | Expresión regular en notación SLLGEN. |
+| Tipo | `number`, `symbol`, `string` o `skip` (se descarta). |
 
-> **Importante:** el nombre del token debe coincidir con el que usas en la gramática. Si defines `(number ...)`, en la gramática escribes `number`.
+Por eso los espacios y los comentarios `//` se ignoran: están marcados como `skip`.
 
-## Especificación de gramática
+## La gramática
 
 ```racket
 (define grammar
-  '(
-    (program (expression) a-program)
+  '((program (expression) a-program)
     (expression (number) lit-exp)
     (expression (identifier) var-exp)
+    (expression ("-" "(" expression "," expression ")") diff-exp)
+    (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
-  ))
+    (expression ("let" identifier "=" expression "in" expression) let-exp)))
 ```
 
-Cada regla es `(lhs (items...) nombre-constructor)`.
+Cada regla tiene la forma `(no-terminal (componentes...) nombre-constructor)`.
 
-## Funciones generadas
+## Qué genera SLLGEN
+
+En `main.rkt`, una sola línea crea los tipos de datos del AST a partir de la gramática:
 
 ```racket
-; Genera los datatypes de Racket
 (sllgen:make-define-datatypes lexical-spec grammar)
-
-; Parser string → AST
-(define scan&parse
-  (sllgen:make-string-parser lexical-spec grammar))
-
-; Parser para múltiples expresiones
-(define stream-parser
-  (sllgen:make-stream-parser lexical-spec grammar))
 ```
 
-## Patrones léxicos SLLGEN
+Gracias a ella existen los constructores `lit-exp`, `diff-exp`, etc., y puedes recorrerlos con `cases`. El parser que transforma texto en AST se obtiene así:
+
+```racket
+(define scan&parse
+  (sllgen:make-string-parser lexical-spec grammar))
+```
+
+## Patrones léxicos útiles
 
 | Patrón | Descripción |
 |---|---|
-| `letter` | Letra a-z, A-Z |
-| `digit` | Dígito 0-9 |
-| `whitespace` | Espacio, tab, newline |
-| `(arbno p)` | Cero o más `p` |
+| `letter` | Letra a–z, A–Z |
+| `digit` | Dígito 0–9 |
+| `(arbno p)` | Cero o más repeticiones de `p` |
 | `(or p1 p2)` | `p1` o `p2` |
-| `(not c)` | Cualquier char excepto `c` |
+| `(not c)` | Cualquier carácter excepto `c` |
+
+> **Importante:** el nombre del token debe coincidir con el que usas en la gramática. Si defines `(number ...)`, en la gramática escribes `number`.

@@ -1,61 +1,25 @@
 ---
 id: ejemplos
-icon: "💡"
-title: "Ejemplos"
+icon: "🧪"
+title: "Explorar el intérprete avanzado"
+order: 9
 ---
 
-# Ejemplos
+# Intérprete EOPL (avanzado)
 
-## Lenguaje LET — expresiones básicas
+Una vez recorridos los ejemplos mínimos, este es un intérprete **completo** para experimentar libremente. No usa la sintaxis tradicional de EOPL, sino una propia más cercana a un lenguaje real.
 
-Con el ejemplo **Lenguaje LET** cargado:
+> 👉 **Carga el ejemplo _Intérprete EOPL (avanzado)_**. Es un proyecto extenso: úsalo como referencia, no para aprender un concepto puntual.
 
-```scheme
-; Literal
-5
+## Qué incorpora
 
-; Diferencia
--(10, 3)
+A diferencia de los ejemplos mínimos, aquí encontrarás de todo: operaciones primitivas, condicionales con llaves, funciones, estado, estructuras, arreglos, listas y reconocimiento de patrones.
 
-; ¿Es cero?
-zero?(0)
-
-; Condicional
-if zero?(0) then 42 else 99
-
-; Ligadura local
-let x = 5 in -(x, 1)
-
-; Anidado
-let x = 10 in
-  let y = 3  in
-    -(x, y)
-```
-
-## Funciones y llamadas
+## Expresiones básicas
 
 ```scheme
-; Crear y llamar una función
-(proc(x) -(x, 1) 10)
-
-; Con let
-let f = proc(x) -(x, 1) in
-  (f 5)
-
-; Función de dos usos
-let double = proc(x) -(0, -(0, -(x, -(0,x)))) in
-  (double 7)
-```
-
-## Intérprete del curso (template EOPL)
-
-```scheme
-; Variable del init-env
+; Variables del init-env (x=1, y=2, z=3)
 x
-
-; Declaración var
-var f = func(x) if (x == 0) { 0 else (x + call f((x - 1))) }
-        in call f(10)
 
 ; Operación primitiva
 (5 + 3)
@@ -64,22 +28,36 @@ var f = func(x) if (x == 0) { 0 else (x + call f((x - 1))) }
 if (x > 0) { x else (0 - x) }
 ```
 
+## Ligadura y funciones
+
+```scheme
+; Ligadura inmutable
+let a = 5 in (a + 1)
+
+; Variable mutable
+var c = 0 in begin set c = (c + 1) ; c end
+
+; Función y llamada
+let doble = func(n) (n + n) in call doble(7)
+```
+
+## Recursión con funciones
+
+```scheme
+var f = func(n) if (n == 0) { 0 else (n + call f((n - 1))) }
+  in call f(10)
+```
+
 ## Verificar el ambiente
 
-Al evaluar `var f = func(x) ... in call f(4)`, el panel de ambiente mostrará:
+Al evaluar una llamada recursiva, el panel **Ambiente** muestra cómo se apila un frame por cada invocación, cada uno con su propio valor del parámetro.
 
-```
-empty-env → init-env {x,y,z} → extend {f} → extend {x=4} → extend {x=3} → ...
-```
+## Depurar con el AST
 
-Cada llamada recursiva agrega un frame con el nuevo valor de `x`.
-
-## Depuración con el AST
-
-El panel AST muestra la estructura del programa. Úsalo para verificar:
+El panel **AST** muestra la estructura del programa. Úsalo para confirmar:
 
 - ¿El parser interpretó la expresión como esperabas?
-- ¿Los operadores tienen los operandos correctos?
-- ¿El `let` liga la variable que quieres?
+- ¿Los operadores recibieron los operandos correctos?
+- ¿El `let` o el `var` ligan la variable que querías?
 
 Haz click en los nodos para explorar el árbol.

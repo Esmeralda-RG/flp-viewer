@@ -1,9 +1,9 @@
 {
-  "id": "eopl-template",
-  "label": "Intérprete EOPL (avanzado)",
-  "description": "Proyecto completo con sintaxis propia (estructuras, arreglos, match…); no usa la forma tradicional de EOPL",
+  "id": "cierres",
+  "label": "Procedimientos y cierres",
+  "description": "Procedimientos como valores (proc/call) que capturan su ambiente de creación",
   "activeFileId": "main",
-  "order": 90,
+  "order": 4,
   "files": [
     { "id": "main",            "name": "main.rkt",        "language": "scheme" },
     { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },

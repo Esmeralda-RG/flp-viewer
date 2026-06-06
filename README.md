@@ -11,7 +11,7 @@ Playground educativo para el curso de **Fundamentos de Lenguajes de Programació
 FLP Viewer actúa como entorno de desarrollo integrado orientado a la pedagogía de intérpretes:
 
 - **Editor multi-archivo** con Monaco Editor: `main.rkt`, `grammar.rkt`, `environment.rkt`, `utils.rkt`, con líneas bloqueadas para el scaffolding generado.
-- **Generador BNF → EOPL/SLLGEN**: el estudiante escribe su gramática en notación BNF y la herramienta genera automáticamente `grammar.rkt`, `main.rkt` (con stubs TODO por completar) y `environment.rkt`.
+- **Generador BNF → EOPL/SLLGEN**: el estudiante define sus tokens léxicos y su gramática BNF, y la herramienta genera automáticamente `grammar.rkt`, `main.rkt` (con stubs por completar) y `environment.rkt`.
 - **Visualizador de AST**: árbol interactivo del último programa evaluado.
 - **Panel de ambiente**: muestra los frames del ambiente de ejecución frame a frame, con soporte para editar el `init-env` desde la interfaz.
 - **Consola de ejecución**: envía expresiones al intérprete y muestra los resultados (o los errores TODO pendientes).
@@ -31,6 +31,35 @@ FLP Viewer actúa como entorno de desarrollo integrado orientado a la pedagogía
 | Intérprete | Racket (proceso externo, vía `execFile`) |
 | Empaquetado | JSZip (descarga del proyecto) |
 | Package manager | pnpm |
+
+---
+
+## Especificación léxica
+
+El modal de generación tiene dos áreas de entrada: **Especificación Léxica** y **Gramática BNF**.
+
+En el área léxica se escribe **un nombre de token por línea**. El generador reconoce los siguientes nombres predefinidos y los expande a las reglas SLLGEN correspondientes:
+
+| Nombre | Descripción |
+|---|---|
+| `number` | Enteros positivos y negativos |
+| `float` | Números decimales positivos y negativos |
+| `identifier` | Identificadores alfanuméricos (letra seguida de letras, dígitos o `?`) |
+| `binary` | Literales binarios con prefijo `b` |
+| `octal` | Literales octales con prefijo `0x` |
+| `hex` | Literales hexadecimales con prefijo `hx` |
+| `text` / `string` | Cadenas entre comillas dobles |
+
+`whitespace` y `comment` (comentarios de línea con `//`) se incluyen **siempre de forma automática**.
+
+Si el área léxica se deja vacía, se incluye el conjunto completo de tokens por defecto (`identifier`, `number`, `float`, `binary`, `octal`, `hex`).
+
+Para un token no listado arriba, se puede escribir directamente la regla en notación SLLGEN empezando con `(`:
+
+```
+(boolean ("true") boolean)
+(boolean ("false") boolean)
+```
 
 ---
 

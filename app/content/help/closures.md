@@ -2,57 +2,56 @@
 id: closures
 icon: "📦"
 title: "Cierres (Closures)"
+order: 7
 ---
 
 # Cierres (Closures)
 
-Un **cierre** es una función que "recuerda" el ambiente en el que fue creada.
+Un **cierre** es un procedimiento que "recuerda" el ambiente en el que fue creado. Es lo que permite que una función use variables que estaban a la vista cuando se definió.
 
-## El problema
+> 👉 **Carga el ejemplo _Procedimientos y cierres_**. Agrega `proc` y `call` sobre el Lenguaje LET.
+
+## Crear y llamar un procedimiento
+
+```
+let f = proc (x) -(x, 1) in (f 5)     // → 4
+```
+
+- `proc (x) -(x, 1)` crea un procedimiento de un parámetro.
+- `(f 5)` lo llama con el argumento `5`.
+
+## Por qué es un cierre
+
+Mira el caso `proc-exp` en `main.rkt`:
+
+```racket
+(proc-exp (param body)
+  (lambda (arg)
+    (eval-expression body
+      (extend-env (list param) (list arg) env))))
+```
+
+El procedimiento se representa como una **función de Racket** que captura `body` y, sobre todo, el `env` del momento en que se creó. Por eso recuerda su ambiente: ese `env` queda "encerrado" dentro de la lambda.
+
+La llamada simplemente evalúa el operador y el argumento, y aplica el procedimiento:
+
+```racket
+(call-exp (rator rand)
+  (let ([proc (eval-expression rator env)]
+        [arg  (eval-expression rand env)])
+    (proc arg)))
+```
+
+## El cierre en acción
 
 ```
 let x = 10 in
-  let f = proc(y) -(x, y) in  ; f captura x=10
-    (f 3)                      ; → 7  (usa x del ambiente de creación)
+  let f = proc (y) -(x, y) in
+    (f 3)                            // → 7
 ```
 
-Sin closures, `x` no estaría disponible cuando se llama `f`.
+Cuando se crea `f`, captura el ambiente donde `x = 10`. Al llamar `(f 3)`, evalúa `-(x, y)` con `y = 3` y el `x = 10` que recordaba. Sin cierres, `x` no estaría disponible en ese momento.
 
-## Representación en el intérprete del curso
+## Sobre la recursión
 
-En el template EOPL del curso, los procedimientos se representan como **lambdas Racket** que capturan `env` y `body`:
-
-```racket
-(func-exp (lids exp)
-  (lambda (args env)
-    (eval-expression exp
-      (extend-env lids args env))))
-```
-
-El closure es la lambda misma — Racket cierra sobre `exp` y el `env` del momento de creación.
-
-## Llamada a un closure
-
-```racket
-(call-exp (exp args)
-  (let ([func-val  (eval-expression exp env)]     ; obtiene la lambda
-        [eval-args (map (lambda (a)
-                          (eval-expression a env))
-                        args)])                    ; evalúa argumentos
-    (apply func-val (list eval-args env))))        ; llama la lambda
-```
-
-## Closures y recursión
-
-En el lenguaje LET básico, la función **no puede llamarse a sí misma** porque `f` no está en el ambiente al momento de crear el closure.
-
-Para recursión se necesita **letrec**:
-
-```
-letrec fact(n) =
-  if zero?(n) then 1
-              else *(n, (fact -(n,1)))
-in (fact 5)   ; → 120
-```
-
-En `letrec`, el ambiente del closure incluye la propia definición de la función.
+En este lenguaje un procedimiento **no puede llamarse a sí mismo**, porque su nombre todavía no está ligado en el ambiente que captura. La recursión requiere `letrec`, que está disponible en el ejemplo **Intérprete EOPL (avanzado)**.

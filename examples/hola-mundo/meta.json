@@ -3,6 +3,7 @@
   "label": "Hola Mundo",
   "description": "Gramática mínima con strings y print",
   "activeFileId": "main",
+  "order": 1,
   "files": [
     { "id": "main",        "name": "main.rkt",        "language": "scheme" },
     { "id": "grammar-rkt", "name": "grammar.rkt",     "language": "scheme" },

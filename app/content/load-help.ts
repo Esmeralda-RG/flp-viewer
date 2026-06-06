@@ -8,6 +8,7 @@ const FrontmatterSchema = z.object({
   id:    z.string().min(1),
   icon:  z.string().min(1),
   title: z.string().min(1),
+  order: z.coerce.number().default(Number.MAX_SAFE_INTEGER),
 })
 
 export function loadHelpSections(): HelpSection[] {
@@ -16,7 +17,6 @@ export function loadHelpSections(): HelpSection[] {
   return fs
     .readdirSync(helpDir)
     .filter(f => f.endsWith('.md'))
-    .sort()
     .map(file => {
       const raw = fs.readFileSync(path.join(helpDir, file), 'utf-8')
       const { data, content } = matter(raw)
@@ -25,4 +25,5 @@ export function loadHelpSections(): HelpSection[] {
 
       return { ...meta, md: content.trim() }
     })
+    .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title))
 }

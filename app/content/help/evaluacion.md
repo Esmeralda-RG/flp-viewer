@@ -2,74 +2,67 @@
 id: evaluacion
 icon: "▶️"
 title: "Evaluación"
+order: 5
 ---
 
 # Evaluación
 
-El intérprete transforma un **AST** en un **valor** recorriendo el árbol recursivamente.
+Evaluar es transformar un **AST** en un **valor**, recorriendo el árbol de forma recursiva.
 
-## eval-program
-
-Punto de entrada. Extrae la expresión principal y la evalúa con `init-env`:
-
-```racket
-(define eval-program
-  (lambda (pgm)
-    (cases program pgm
-      (a-program (exp)
-        (eval-expression exp (init-env))))))
-```
+> 👉 **Carga el ejemplo _Lenguaje LET_** y abre `main.rkt`: aquí explicamos su `eval-expression` caso por caso.
 
 ## eval-expression
 
-Despacha según el tipo de nodo del AST. Cada caso corresponde a una producción de la gramática:
+`eval-expression` recibe una expresión y un ambiente, y despacha según el tipo de nodo. Cada caso corresponde a una regla de la gramática:
 
 ```racket
 (define eval-expression
   (lambda (exp env)
     (cases expression exp
 
-      ; Literal numérico → devuelve el número directamente
       (lit-exp (n) n)
 
-      ; Variable → busca en el ambiente
-      (var-exp (id)
-        (apply-env env id))
+      (var-exp (id) (apply-env env id))
 
-      ; Diferencia → evalúa ambos lados y resta
-      (diff-exp (exp1 exp2)
-        (- (eval-expression exp1 env)
-           (eval-expression exp2 env)))
+      (diff-exp (e1 e2)
+        (- (eval-expression e1 env)
+           (eval-expression e2 env)))
 
-      ; Condicional → evalúa condición, luego rama correspondiente
-      (if-exp (test-exp true-exp false-exp)
-        (if (eval-expression test-exp env)
-            (eval-expression true-exp env)
-            (eval-expression false-exp env)))
+      (zero?-exp (e)
+        (if (zero? (eval-expression e env)) #t #f))
 
-      ; Ligadura local → extiende el ambiente con el nuevo binding
-      (let-exp (id rhs-exp body-exp)
-        (let ([val (eval-expression rhs-exp env)])
-          (eval-expression body-exp
-            (extend-env (list id) (list val) env))))
+      (if-exp (test t f)
+        (if (eval-expression test env)
+            (eval-expression t env)
+            (eval-expression f env)))
 
-      )))
+      (let-exp (id rhs body)
+        (eval-expression body
+          (extend-env (list id)
+                      (list (eval-expression rhs env))
+                      env))))))
 ```
 
-## Patrón general
+## El patrón común
 
-Cada caso sigue el mismo patrón:
+Casi todos los casos siguen tres pasos:
 
-1. **Extraer** los campos del nodo (`id`, `exp1`, `exp2`, etc.)
-2. **Evaluar** sub-expresiones recursivamente con `(eval-expression sub env)`
-3. **Combinar** los resultados y devolver el valor final
+1. **Extraer** los campos del nodo (`e1`, `e2`, `id`…).
+2. **Evaluar** las sub-expresiones recursivamente con `(eval-expression sub env)`.
+3. **Combinar** los resultados y devolver el valor.
 
-## Error de TODO
+Dónde difieren:
 
-Si ejecutas una expresión antes de implementar su caso, verás:
+- `lit-exp` es el **caso base**: no recurre, devuelve el número tal cual.
+- `var-exp` consulta el **ambiente** en vez de recurrir.
+- `let-exp` es el único que **cambia el ambiente**: lo extiende antes de evaluar el cuerpo.
+
+## Pruébalo
 
 ```
-✕ TODO: implement lit-exp
+zero?(0)                         // → #t
+if zero?(0) then 42 else 99      // → 42
+let x = 10 in let y = 3 in -(x, y)  // → 7
 ```
 
-Esto indica qué caso falta. Busca ese `(error "TODO: implement lit-exp")` en `main.rkt` y reemplázalo con la implementación.
+Observa en el panel **AST** cómo cada expresión corresponde a la estructura de nodos, y en **Ambiente** cómo los `let` anidados apilan un frame por cada ligadura.
