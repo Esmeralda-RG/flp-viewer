@@ -31,7 +31,7 @@ export default function EditorPanel({
                 'flex items-center gap-1.5 px-4 py-2 text-xs border-b-2 shrink-0 transition-colors whitespace-nowrap',
                 active
                   ? 'text-white border-blue-500 bg-[#1e1e1e]'
-                  : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-white/5',
+                  : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/5',
               ].join(' ')}
             >
               <FileIcon name={file.name} />
@@ -40,7 +40,7 @@ export default function EditorPanel({
           )
         })}
          
-        <div className="ml-auto px-3 py-2 text-[10px] text-zinc-600 shrink-0">
+        <div className="ml-auto px-3 py-2 text-[10px] text-zinc-400 shrink-0">
           {files.find((f) => f.id === activeFileId)?.language}
         </div>
       </div>
@@ -79,7 +79,7 @@ function FileIcon({ name }: Readonly<{ name: string }>) {
     txt: 'text-zinc-400',
   }
   return (
-    <span className={`text-[10px] font-mono opacity-70 ${colors[ext] ?? 'text-zinc-400'}`}>
+    <span className={`text-[10px] font-mono ${colors[ext] ?? 'text-zinc-400'}`}>
       {ext}
     </span>
   )

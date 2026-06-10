@@ -47,7 +47,7 @@ export default function Navbar({
     <header className="flex items-center gap-1 px-3 py-1.5 bg-[#323233] border-b border-[#3c3c3c] shrink-0 h-10">
        
       <span className="text-sm font-semibold text-zinc-200 mr-2">FLP Viewer</span>
-      <span className="text-zinc-700 text-xs hidden sm:block">Intérprete Educativo</span>
+      <span className="text-zinc-400 text-xs hidden sm:block">Intérprete Educativo</span>
 
       <div className="w-px h-4 bg-[#3c3c3c] mx-2" />
 
@@ -71,7 +71,7 @@ export default function Navbar({
                 className="w-full text-left px-3 py-2 hover:bg-white/10 transition-colors"
               >
                 <div className="text-xs font-medium text-zinc-200">{ex.label}</div>
-                <div className="text-[10px] text-zinc-500 mt-0.5">{ex.description}</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5">{ex.description}</div>
               </button>
             ))}
           </div>

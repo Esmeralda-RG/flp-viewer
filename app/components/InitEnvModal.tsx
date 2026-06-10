@@ -72,12 +72,12 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
          
         <div className="px-4 py-4 space-y-2 max-h-72 overflow-y-auto">
           {rows.length === 0 ? (
-            <p className="text-xs text-zinc-600 text-center py-6">
+            <p className="text-xs text-zinc-400 text-center py-6">
               Sin variables — el intérprete arranca con ambiente vacío
             </p>
           ) : (
             <>
-              <div className="grid grid-cols-[1fr_1fr_4rem_1.5rem] gap-2 text-[10px] text-zinc-600 uppercase tracking-wide mb-1 px-1">
+              <div className="grid grid-cols-[1fr_1fr_4rem_1.5rem] gap-2 text-[10px] text-zinc-400 uppercase tracking-wide mb-1 px-1">
                 <span>Nombre</span><span>Valor</span><span>Tipo</span><span />
               </div>
               {rows.map(row => {
@@ -106,7 +106,7 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
                     </span>
                     <button
                       onClick={() => removeRow(row.id)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors"
+                      className="text-zinc-400 hover:text-red-400 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14">
                         <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -133,7 +133,7 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
         </div>
 
          
-        <div className="px-4 pb-2 text-[10px] text-zinc-700 font-mono">
+        <div className="px-4 pb-2 text-[10px] text-zinc-400 font-mono">
           Tipos: <span className="text-blue-400">1</span> número ·{' '}
           <span className="text-green-400">&quot;texto&quot;</span> cadena ·{' '}
           <span className="text-yellow-400">#t #f</span> booleano ·{' '}

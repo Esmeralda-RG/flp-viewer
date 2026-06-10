@@ -35,6 +35,9 @@ main {
   flex-direction: column;
 }
 
+/* Monaco Editor — comment token color boosted to meet WCAG AA 4.5:1 on #1e1e1e */
+.monaco-editor .mtk7 { color: #6aaf50 !important; }
+
 /* Monaco Editor — locked (read-only) line decorations */
 .locked-line {
   background-color: rgba(255, 255, 255, 0.03) !important;

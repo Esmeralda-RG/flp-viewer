@@ -191,7 +191,7 @@ export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<Env
       >
         {frames.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-xs text-zinc-600">Sin ambientes activos</p>
+            <p className="text-xs text-zinc-400">Sin ambientes activos</p>
           </div>
         ) : (
           <div
@@ -242,7 +242,7 @@ function Header({ count, onReset, onEditInitEnv }: Readonly<{
         <button
           type="button"
           onClick={onEditInitEnv}
-          className="text-[10px] px-1.5 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
+          className="text-[10px] px-1.5 py-0.5 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
           title="Editar ambiente inicial"
         >
           editar init-env
@@ -251,11 +251,11 @@ function Header({ count, onReset, onEditInitEnv }: Readonly<{
       <div className="flex-1" />
       {count > 0 && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-zinc-600">{count} snapshot{count === 1 ? '' : 's'}</span>
+          <span className="text-[10px] text-zinc-400">{count} snapshot{count === 1 ? '' : 's'}</span>
           <button
             type="button"
             onClick={onReset}
-            className="text-[10px] px-1.5 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
+            className="text-[10px] px-1.5 py-0.5 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
           >
             reset vista
           </button>

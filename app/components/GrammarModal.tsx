@@ -13,7 +13,7 @@ function GrammarPreview({
   const lines = content.split('\n')
 
   return (
-    <div className="h-full overflow-auto p-3 font-mono text-xs leading-relaxed">
+    <div className="h-full overflow-auto p-3 font-mono text-xs leading-relaxed" tabIndex={0}>
       {lines.map((line, i) => {
         const m = new RegExp(STUB_RE).exec(line)
         if (m) {
@@ -64,8 +64,8 @@ function StubLine({ tokenName, onFill }: Readonly<{ tokenName: string; onFill: (
 
 const SCHEME_COLORS: [RegExp, string][] = [
   [/^(#lang\s+\S+)/, 'text-green-400'],
-  [/^(;;;.*|;;.*)/, 'text-zinc-600'],
-  [/^(\s*;.*)/, 'text-zinc-500'],
+  [/^(;;;.*|;;.*)/, 'text-zinc-400'],
+  [/^(\s*;.*)/, 'text-zinc-400'],
   [/^(\s*\(define\b)/, 'text-blue-400'],
   [/^(\s*\(provide\b)/, 'text-purple-400'],
 ]
@@ -181,7 +181,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
     )
   } else {
     statusMessage = (
-      <div className="flex-1 text-xs text-zinc-600">Escribe una gramática BNF para ver la previsualización</div>
+      <div className="flex-1 text-xs text-zinc-400">Escribe una gramática BNF para ver la previsualización</div>
     )
   }
 
@@ -203,10 +203,10 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
          
         <div className="flex items-center gap-3 px-4 py-2.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
           <span className="text-sm font-semibold text-zinc-200">Generador BNF → EOPL/SLLGEN</span>
-          <span className="text-xs text-zinc-500">Escribe tu gramática y genera los archivos Racket automáticamente</span>
+          <span className="text-xs text-zinc-400">Escribe tu gramática y genera los archivos Racket automáticamente</span>
           <button
             onClick={onClose}
-            className="ml-auto text-zinc-500 hover:text-white transition-colors p-1 rounded hover:bg-white/10"
+            className="ml-auto text-zinc-400 hover:text-white transition-colors p-1 rounded hover:bg-white/10"
             aria-label="Cerrar"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
@@ -224,7 +224,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
             <div className="flex flex-col border-b border-[#3c3c3c]" style={{ height: '28%' }}>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">Especificación Léxica</span>
-                <span className="text-[10px] text-zinc-600 ml-auto">un token por línea</span>
+                <span className="text-[10px] text-zinc-400 ml-auto">un token por línea</span>
               </div>
               <div className="flex-1 min-h-0">
                 <MonacoEditor
@@ -242,7 +242,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
             <div className="flex flex-col flex-1 min-h-0">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">Gramática BNF</span>
-                <span className="text-[10px] text-zinc-600 ml-auto">
+                <span className="text-[10px] text-zinc-400 ml-auto">
                   &lt;nt&gt; ::= items | alt &nbsp;·&nbsp; =&gt; nombre
                 </span>
               </div>
@@ -275,7 +275,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
             <div className="flex-1 min-h-0 overflow-hidden bg-[#1e1e1e]">
               {hasGrammar
                 ? <GrammarPreview content={preview} onStubFill={handleStubFill} />
-                : <div className="flex items-center justify-center h-full text-xs text-zinc-600">Escribe una gramática para ver la previsualización</div>
+                : <div className="flex items-center justify-center h-full text-xs text-zinc-400">Escribe una gramática para ver la previsualización</div>
               }
             </div>
           </div>

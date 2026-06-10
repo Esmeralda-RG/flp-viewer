@@ -121,10 +121,10 @@ export default function ConsoleOutput({
        
       <div className="flex items-center px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
         <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Consola</span>
-        <span className="ml-2 text-xs text-zinc-600">({logs.length})</span>
+        <span className="ml-2 text-xs text-zinc-400">({logs.length})</span>
         <button
           onClick={onClear}
-          className="ml-auto text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-1.5 py-0.5 rounded hover:bg-white/5"
+          className="ml-auto text-xs text-zinc-400 hover:text-zinc-200 transition-colors px-1.5 py-0.5 rounded hover:bg-white/5"
         >
           limpiar
         </button>
@@ -133,7 +133,7 @@ export default function ConsoleOutput({
        
       <div className="flex-1 overflow-auto p-2 font-mono text-xs">
         {logs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-zinc-600">
+          <div className="flex items-center justify-center h-full text-zinc-400">
             {sessionActive ? 'Escribe una expresión y presiona Enter' : 'Presiona ▶ Ejecutar para comenzar'}
           </div>
         ) : (
@@ -166,7 +166,7 @@ export default function ConsoleOutput({
           </>
         ) : (
           <>
-            <span className={`font-mono text-xs pt-0.75 shrink-0 select-none ${sessionActive ? 'text-sky-400' : 'text-zinc-700'}`}>
+            <span className={`font-mono text-xs pt-0.75 shrink-0 select-none ${sessionActive ? 'text-sky-400' : 'text-zinc-400'}`}>
               --&gt;
             </span>
             <textarea

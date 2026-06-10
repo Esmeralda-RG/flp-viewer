@@ -252,7 +252,7 @@ export default function ASTViewer({ ast }: Readonly<ASTViewerProps>) {
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <p className="text-xs text-zinc-600">Ejecuta el código para ver el AST</p>
+            <p className="text-xs text-zinc-400">Ejecuta el código para ver el AST</p>
           </div>
         )}
       </div>

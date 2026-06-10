@@ -26,7 +26,7 @@ const mdComponents = {
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
     <li className="flex gap-2 text-xs text-zinc-300 leading-relaxed">
-      <span className="text-zinc-600 shrink-0 mt-0.5">›</span>
+      <span className="text-zinc-400 shrink-0 mt-0.5">›</span>
       <span>{children}</span>
     </li>
   ),
@@ -192,7 +192,7 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
            
           <nav className="w-44 shrink-0 flex flex-col py-2 bg-[#1e1e1e] border-r border-[#3c3c3c] overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="px-3 py-4 text-[11px] text-zinc-600 text-center">Sin resultados</p>
+              <p className="px-3 py-4 text-[11px] text-zinc-400 text-center">Sin resultados</p>
             ) : (
               filtered.map(s => (
                 <button
@@ -214,13 +214,13 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
           </nav>
 
            
-          <div className="flex-1 overflow-y-auto px-6 py-5 min-w-0">
+          <div className="flex-1 overflow-y-auto px-6 py-5 min-w-0" tabIndex={0}>
             {active ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
                 {active.md.trim()}
               </ReactMarkdown>
             ) : (
-              <p className="text-xs text-zinc-600 mt-8 text-center">No hay contenido que coincida.</p>
+              <p className="text-xs text-zinc-400 mt-8 text-center">No hay contenido que coincida.</p>
             )}
           </div>
         </div>

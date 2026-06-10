@@ -37,7 +37,7 @@ export default function WelcomeModal() {
             
             <div >
               <h2 className="text-base font-semibold text-zinc-100 leading-tight">Bienvenido a FLP Viewer</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Intérprete Educativo · Universidad del Valle</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Intérprete Educativo · Universidad del Valle</p>
             </div>
           </div>
           <p className="text-sm text-zinc-400 leading-relaxed">
@@ -47,7 +47,7 @@ export default function WelcomeModal() {
         </div>
 
         <div className="px-6 py-5 border-b border-[#3c3c3c]">
-          <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">¿Cómo empezar?</p>
+          <p className="text-[10px] font-semibold text-zinc-300 uppercase tracking-widest mb-3">¿Cómo empezar?</p>
           <div className="space-y-3">
             <Step num={1}>
               Presiona{' '}
@@ -74,15 +74,15 @@ export default function WelcomeModal() {
         </div>
 
         <div className="px-6 py-5 border-b border-[#3c3c3c]">
-          <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-3">Resultado esperado</p>
+          <p className="text-[10px] font-semibold text-zinc-300 uppercase tracking-widest mb-3">Resultado esperado</p>
           <div className="rounded-lg border border-[#3c3c3c] overflow-hidden">
            
             <div className="flex items-center px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c]">
-              <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide">Consola</span>
+              <span className="text-[10px] font-medium text-zinc-300 uppercase tracking-wide">Consola</span>
             </div>
           
             <div className="bg-[#1a1a1a] p-3 font-mono text-xs space-y-1">
-              <div className="flex gap-2 items-start text-zinc-600">
+              <div className="flex gap-2 items-start text-zinc-400">
                 <span className="shrink-0 w-6 text-right opacity-70">i</span>
                 <span>Escribe una expresión y presiona Enter</span>
               </div>
@@ -98,7 +98,7 @@ export default function WelcomeModal() {
           
             <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] flex items-center gap-2 px-3 py-2">
               <span className="text-sky-400 font-mono text-xs select-none">--&gt;</span>
-              <span className="flex-1 font-mono text-xs text-zinc-700 italic">expresión…</span>
+              <span className="flex-1 font-mono text-xs text-zinc-400 italic">expresión…</span>
             </div>
           </div>
         </div>
@@ -111,8 +111,8 @@ export default function WelcomeModal() {
           >
             ¡Empezar!
           </button>
-          <p className="text-center text-[10px] text-zinc-600 mt-2.5">
-            El ejemplo <span className="text-zinc-500">Hola Mundo</span> ya está cargado y listo para usar
+          <p className="text-center text-[10px] text-zinc-400 mt-2.5">
+            El ejemplo <span className="text-zinc-300">Hola Mundo</span> ya está cargado y listo para usar
           </p>
         </div>
       </div>
