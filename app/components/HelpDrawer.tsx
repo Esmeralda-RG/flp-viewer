@@ -128,17 +128,6 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
   const active = filtered.find(s => s.id === activeId) ?? filtered[0] ?? null
 
   return (
-    <>
-       
-      <button
-        type="button"
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity duration-280"
-        style={{ opacity: open ? 1 : 0 }}
-        onClick={onClose}
-        aria-label="Cerrar ayuda"
-      />
-
-       
       <div
         className="fixed top-0 right-0 bottom-0 z-50 flex flex-col bg-[#1e1e1e] border-l border-[#3c3c3c] shadow-2xl"
         style={{
@@ -214,7 +203,7 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
           </nav>
 
            
-          <div className="flex-1 overflow-y-auto px-6 py-5 min-w-0" tabIndex={0}>
+          <div className="flex-1 overflow-y-auto px-6 py-5 min-w-0" >
             {active ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
                 {active.md.trim()}
@@ -225,6 +214,5 @@ export default function HelpDrawer({ open, onClose, sections }: Readonly<HelpDra
           </div>
         </div>
       </div>
-    </>
   )
 }
