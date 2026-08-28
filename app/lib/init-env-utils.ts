@@ -1,5 +1,13 @@
 import type { InitBinding } from '@/app/types/grammar'
-export type { InitBinding }
+
+export const TYPE_COLORS: Record<string, string> = {
+  number:  'text-blue-300 bg-blue-900/20 border-blue-800/40',
+  string:  'text-green-300 bg-green-900/20 border-green-800/40',
+  boolean: 'text-yellow-300 bg-yellow-900/20 border-yellow-800/40',
+  symbol:  'text-purple-300 bg-purple-900/20 border-purple-800/40',
+  list:    'text-cyan-300 bg-cyan-900/20 border-cyan-800/40',
+  value:   'text-zinc-400 bg-zinc-800/20 border-zinc-700/40',
+}
 
 export function inferType(value: string): string {
   if (/^-?\d+(\.\d+)?$/.test(value)) return 'number'

@@ -1,21 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import type { Example } from '@/app/types/examples'
-
-interface NavbarProps {
-  examples: Example[]
-  onExampleSelect: (example: Example) => void
-  onGrammarOpen: () => void
-  onDownload: () => void
-  onRun: () => void
-  onStop: () => void
-  onClear: () => void
-  onHelpOpen: () => void
-  running: boolean
-  stepMode: boolean
-  onStepModeToggle: () => void
-}
+import type { NavbarProps } from '@/app/types/props'
 
 export default function Navbar({
   examples,
@@ -45,13 +31,11 @@ export default function Navbar({
 
   return (
     <header className="flex items-center gap-1 px-3 py-1.5 bg-[#323233] border-b border-[#3c3c3c] shrink-0 h-10">
-       
       <span className="text-sm font-semibold text-zinc-200 mr-2">FLP Viewer</span>
       <span className="text-zinc-400 text-xs hidden sm:block">Intérprete Educativo</span>
 
       <div className="w-px h-4 bg-[#3c3c3c] mx-2" />
 
-       
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setDropdownOpen((o) => !o)}
@@ -78,7 +62,6 @@ export default function Navbar({
         )}
       </div>
 
-       
       <button
         onClick={onGrammarOpen}
         className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
@@ -90,7 +73,6 @@ export default function Navbar({
         Gramática
       </button>
 
-       
       <button
         onClick={onDownload}
         className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
@@ -102,7 +84,6 @@ export default function Navbar({
         Descargar
       </button>
 
-       
       <button
         onClick={onStepModeToggle}
         title="Paso a paso"
@@ -119,10 +100,8 @@ export default function Navbar({
         Paso a paso
       </button>
 
-       
       <div className="flex-1" />
 
-       
       <button
         onClick={onHelpOpen}
         className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"

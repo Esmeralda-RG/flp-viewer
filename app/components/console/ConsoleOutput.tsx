@@ -1,37 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-
-import type { LogLevel, LogEntry } from '@/app/types/console'
-export type { LogLevel, LogEntry }
-
-const levelStyles: Record<LogLevel, string> = {
-  input:  'text-sky-300',
-  output: 'text-green-400',
-  info:   'text-zinc-400',
-  warn:   'text-amber-400',
-  error:  'text-red-400',
-}
-
-const levelPrefix: Record<LogLevel, string> = {
-  input:  '-->',
-  output: '→',
-  info:   'i',
-  warn:   '⚠',
-  error:  '✕',
-}
-
-interface ConsoleOutputProps {
-  logs: LogEntry[]
-  inputValue: string
-  onInputChange: (v: string) => void
-  onSubmit: () => void
-  running: boolean
-  sessionActive: boolean
-  onClear: () => void
-  pendingSteps: number
-  onNextStep: () => void
-}
+import type { ConsoleOutputProps } from '@/app/types/props'
+import { levelStyles, levelPrefix } from '@/app/lib/console-format'
 
 export default function ConsoleOutput({
   logs,
@@ -118,7 +89,6 @@ export default function ConsoleOutput({
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
-       
       <div className="flex items-center px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
         <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Consola</span>
         <span className="ml-2 text-xs text-zinc-400">({logs.length})</span>
@@ -130,7 +100,6 @@ export default function ConsoleOutput({
         </button>
       </div>
 
-       
       <div className="flex-1 overflow-auto p-2 font-mono text-xs">
         {logs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-zinc-400">
@@ -151,7 +120,6 @@ export default function ConsoleOutput({
         )}
       </div>
 
-       
       <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] flex items-start gap-2 px-3 py-2 shrink-0">
         {pendingSteps > 0 ? (
           <>

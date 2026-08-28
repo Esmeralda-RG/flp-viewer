@@ -1,4 +1,4 @@
-import type { GrammarAST, GrammarRule, Production, BNFItem } from './bnf-parser'
+import type { GrammarAST, GrammarRule, Production, BNFItem } from '@/app/types/bnf'
 
 // Non-terminals that map directly to SLLGEN lexer primitives
 const PRIMITIVES = new Set(['number', 'identifier', 'string', 'boolean', 'letter', 'digit'])

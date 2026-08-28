@@ -21,3 +21,8 @@ export interface TraceResult {
   environments: EnvFrame[]
   output: string | null
 }
+
+export interface RawSnapshot {
+  tag: string
+  frames: Record<string, unknown>[]
+}

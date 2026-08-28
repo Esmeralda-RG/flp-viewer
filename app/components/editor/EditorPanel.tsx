@@ -1,15 +1,8 @@
 'use client'
 
 import CodeEditor from './CodeEditor'
-import type { EditorFile } from '@/app/types/editor'
-export type { EditorFile }
-
-interface EditorPanelProps {
-  files: EditorFile[]
-  activeFileId: string
-  onFileSelect: (id: string) => void
-  onFileChange: (id: string, content: string) => void
-}
+import FileIcon from './FileIcon'
+import type { EditorPanelProps } from '@/app/types/props'
 
 export default function EditorPanel({
   files,
@@ -19,7 +12,6 @@ export default function EditorPanel({
 }: Readonly<EditorPanelProps>) {
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
-       
       <div className="flex items-end bg-[#252526] border-b border-[#3c3c3c] shrink-0 overflow-x-auto">
         {files.map((file) => {
           const active = file.id === activeFileId
@@ -39,13 +31,11 @@ export default function EditorPanel({
             </button>
           )
         })}
-         
         <div className="ml-auto px-3 py-2 text-[10px] text-zinc-400 shrink-0">
           {files.find((f) => f.id === activeFileId)?.language}
         </div>
       </div>
 
-       
       <div className="flex-1 min-h-0 relative">
         {files.map((file) => (
           <div
@@ -66,21 +56,5 @@ export default function EditorPanel({
         ))}
       </div>
     </div>
-  )
-}
-
-function FileIcon({ name }: Readonly<{ name: string }>) {
-  const ext = name.split('.').pop() ?? ''
-  const colors: Record<string, string> = {
-    rkt: 'text-red-400',
-    g: 'text-yellow-400',
-    lark: 'text-yellow-400',
-    ebnf: 'text-yellow-400',
-    txt: 'text-zinc-400',
-  }
-  return (
-    <span className={`text-[10px] font-mono ${colors[ext] ?? 'text-zinc-400'}`}>
-      {ext}
-    </span>
   )
 }

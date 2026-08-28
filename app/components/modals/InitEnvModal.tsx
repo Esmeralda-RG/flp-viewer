@@ -1,27 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { type InitBinding, inferType } from '@/app/lib/init-env-utils'
-
-const TYPE_COLORS: Record<string, string> = {
-  number:  'text-blue-300 bg-blue-900/20 border-blue-800/40',
-  string:  'text-green-300 bg-green-900/20 border-green-800/40',
-  boolean: 'text-yellow-300 bg-yellow-900/20 border-yellow-800/40',
-  symbol:  'text-purple-300 bg-purple-900/20 border-purple-800/40',
-  list:    'text-cyan-300 bg-cyan-900/20 border-cyan-800/40',
-  value:   'text-zinc-400 bg-zinc-800/20 border-zinc-700/40',
-}
-
-interface Row extends InitBinding { id: string }
-
-interface InitEnvModalProps {
-  bindings: InitBinding[]
-  onClose: () => void
-  onApply: (bindings: InitBinding[]) => void
-}
+import { inferType, TYPE_COLORS } from '@/app/lib/init-env-utils'
+import type { InitEnvModalProps } from '@/app/types/props'
+import type { InitEnvRow } from '@/app/types/grammar'
 
 export default function InitEnvModal({ bindings: initial, onClose, onApply }: Readonly<InitEnvModalProps>) {
-  const [rows, setRows] = useState<Row[]>(
+  const [rows, setRows] = useState<InitEnvRow[]>(
     initial.map((b, i) => ({ ...b, id: String(i) }))
   )
 
@@ -58,7 +43,6 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
 
       <div className="relative bg-[#1e1e1e] border border-[#3c3c3c] rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
 
-         
         <div className="flex items-center gap-2 px-4 py-3 bg-[#252526] border-b border-[#3c3c3c]">
           <span className="text-sm font-semibold text-zinc-200">Ambiente Inicial</span>
           <span className="text-xs text-zinc-500">Variables disponibles al iniciar el intérprete</span>
@@ -69,7 +53,6 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
           </button>
         </div>
 
-         
         <div className="px-4 py-4 space-y-2 max-h-72 overflow-y-auto">
           {rows.length === 0 ? (
             <p className="text-xs text-zinc-400 text-center py-6">
@@ -119,7 +102,6 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
           )}
         </div>
 
-         
         <div className="px-4 pb-3">
           <button
             onClick={addRow}
@@ -132,7 +114,6 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
           </button>
         </div>
 
-         
         <div className="px-4 pb-2 text-[10px] text-zinc-400 font-mono">
           Tipos: <span className="text-blue-400">1</span> número ·{' '}
           <span className="text-green-400">&quot;texto&quot;</span> cadena ·{' '}
@@ -141,7 +122,6 @@ export default function InitEnvModal({ bindings: initial, onClose, onApply }: Re
           <span className="text-cyan-400">&apos;(1 2)</span> lista
         </div>
 
-         
         <div className="flex items-center gap-3 px-4 py-3 bg-[#252526] border-t border-[#3c3c3c]">
           {hasDupes
             ? <span className="text-xs text-amber-400 flex-1">⚠ Nombres duplicados</span>

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { writeFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { EditorFileLike } from '@/app/types/racket'
 
 const execFileAsync = promisify(execFile)
 
@@ -20,11 +21,6 @@ function injectRuntime(name: string, content: string): string {
   if (name === 'environment.rkt') return content + TRACKING_BLOCK
   if (name === 'main.rkt') return content + STREAM_PARSER_BLOCK
   return content
-}
-
-interface FileEntry {
-  name: string
-  content: string
 }
 
 // Elimina la sección verbose "context...: / location..." del stderr de Racket
@@ -44,7 +40,7 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as {
-      files?: FileEntry[]
+      files?: EditorFileLike[]
       testInput?: string
     }
 

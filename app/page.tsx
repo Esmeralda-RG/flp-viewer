@@ -1,4 +1,4 @@
-import PlaygroundLayout from './components/PlaygroundLayout'
+import PlaygroundLayout from './components/layout/PlaygroundLayout'
 import { loadExamples } from './lib/load-examples'
 import { loadHelpSections } from './content/load-help'
 

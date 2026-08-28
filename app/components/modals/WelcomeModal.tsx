@@ -1,17 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-
-function Step({ num, children }: Readonly<{ num: number; children: React.ReactNode }>) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400 text-[10px] font-semibold flex items-center justify-center mt-0.5">
-        {num}
-      </span>
-      <span className="text-sm text-zinc-300 leading-relaxed">{children}</span>
-    </div>
-  )
-}
+import Step from './Step'
 
 export default function WelcomeModal() {
   const [open, setOpen] = useState(true)
@@ -20,7 +10,6 @@ export default function WelcomeModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    
       <button
         type="button"
         aria-label="Cerrar modal"
@@ -28,14 +17,11 @@ export default function WelcomeModal() {
         onClick={() => setOpen(false)}
       />
 
-
       <div className="relative bg-[#1e1e1e] border border-[#3c3c3c] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
-  
         <div className="px-6 pt-6 pb-5 border-b border-[#3c3c3c]">
-          <div className="flex items-center mb-4 ">
-            
-            <div >
+          <div className="flex items-center mb-4">
+            <div>
               <h2 className="text-base font-semibold text-zinc-100 leading-tight">Bienvenido a FLP Viewer</h2>
               <p className="text-xs text-zinc-400 mt-0.5">Intérprete Educativo · Universidad del Valle</p>
             </div>
@@ -76,11 +62,10 @@ export default function WelcomeModal() {
         <div className="px-6 py-5 border-b border-[#3c3c3c]">
           <p className="text-[10px] font-semibold text-zinc-300 uppercase tracking-widest mb-3">Resultado esperado</p>
           <div className="rounded-lg border border-[#3c3c3c] overflow-hidden">
-           
             <div className="flex items-center px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c]">
               <span className="text-[10px] font-medium text-zinc-300 uppercase tracking-wide">Consola</span>
             </div>
-          
+
             <div className="bg-[#1a1a1a] p-3 font-mono text-xs space-y-1">
               <div className="flex gap-2 items-start text-zinc-400">
                 <span className="shrink-0 w-6 text-right opacity-70">i</span>
@@ -95,7 +80,7 @@ export default function WelcomeModal() {
                 <span>&quot;hola mundo&quot;</span>
               </div>
             </div>
-          
+
             <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] flex items-center gap-2 px-3 py-2">
               <span className="text-sky-400 font-mono text-xs select-none">--&gt;</span>
               <span className="flex-1 font-mono text-xs text-zinc-400 italic">expresión…</span>
@@ -103,7 +88,6 @@ export default function WelcomeModal() {
           </div>
         </div>
 
-       
         <div className="px-6 py-5">
           <button
             onClick={() => setOpen(false)}

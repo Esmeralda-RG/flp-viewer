@@ -5,7 +5,6 @@ import { generateEnvironmentRkt } from './env-generator'
 import { generateMainRkt } from './main-generator'
 
 import type { PipelineResult } from '@/app/types/grammar'
-export type { PipelineResult }
 
 export function runPipeline(lexInput: string, grammarInput: string): PipelineResult {
   const empty: PipelineResult = {

@@ -4,17 +4,9 @@ import { useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { OnMount } from '@monaco-editor/react'
 import type { editor as MonacoEditorNS } from 'monaco-editor'
+import type { CodeEditorProps } from '@/app/types/props'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
-
-export interface CodeEditorProps {
-  value: string
-  onChange: (value: string) => void
-  language?: string
-  theme?: string
-   
-  lockedLines?: number[]
-}
 
 export default function CodeEditor({
   value,

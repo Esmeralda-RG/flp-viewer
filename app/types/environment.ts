@@ -6,6 +6,12 @@ export interface Binding {
 
 export interface EnvFrame {
   label: string
-   
+
   frames: Binding[][]
+}
+
+export interface Transform {
+  x: number
+  y: number
+  k: number
 }
