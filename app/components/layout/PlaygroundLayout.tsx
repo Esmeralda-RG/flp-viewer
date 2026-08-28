@@ -18,7 +18,7 @@ import type { PlaygroundLayoutProps } from '@/app/types/props'
 import type { Example } from '@/app/types/examples'
 import type { GeneratedGrammarFiles } from '@/app/types/editor'
 
-export default function PlaygroundLayout({ examples, helpSections }: Readonly<PlaygroundLayoutProps>) {
+export default function PlaygroundLayout({ examples, helpSections, glossaryTerms }: Readonly<PlaygroundLayoutProps>) {
   const projectFiles = useProjectFiles(examples)
   const session = useRacketSession()
 
@@ -67,6 +67,7 @@ export default function PlaygroundLayout({ examples, helpSections }: Readonly<Pl
                   activeFileId={projectFiles.activeFileId}
                   onFileSelect={projectFiles.setActiveFileId}
                   onFileChange={projectFiles.updateFile}
+                  glossaryTerms={glossaryTerms}
                 />
               </Panel>
               <ResizeBar className="w-1 cursor-col-resize" />

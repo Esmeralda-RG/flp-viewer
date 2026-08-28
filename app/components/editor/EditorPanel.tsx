@@ -9,6 +9,7 @@ export default function EditorPanel({
   activeFileId,
   onFileSelect,
   onFileChange,
+  glossaryTerms,
 }: Readonly<EditorPanelProps>) {
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -51,6 +52,7 @@ export default function EditorPanel({
               onChange={(content) => onFileChange(file.id, content)}
               language={file.language}
               lockedLines={file.lockedLines}
+              glossaryTerms={glossaryTerms}
             />
           </div>
         ))}

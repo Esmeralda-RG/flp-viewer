@@ -6,12 +6,14 @@ import type { InitBinding } from './grammar'
 import type { LogEntry } from './console'
 import type { HelpSection } from './help'
 import type { Example } from './examples'
+import type { GlossaryTerm } from './glossary'
 
 export interface EditorPanelProps {
   files: EditorFile[]
   activeFileId: string
   onFileSelect: (id: string) => void
   onFileChange: (id: string, content: string) => void
+  glossaryTerms: GlossaryTerm[]
 }
 
 export interface FileIconProps {
@@ -24,6 +26,7 @@ export interface CodeEditorProps {
   language?: string
   theme?: string
   lockedLines?: number[]
+  glossaryTerms: GlossaryTerm[]
 }
 
 export interface ConsoleOutputProps {
@@ -110,6 +113,7 @@ export interface MarkdownCodeProps extends MarkdownChildrenProps {
 export interface PlaygroundLayoutProps {
   examples: Example[]
   helpSections: HelpSection[]
+  glossaryTerms: GlossaryTerm[]
 }
 
 export interface NavbarProps {
