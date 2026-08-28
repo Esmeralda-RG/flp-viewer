@@ -3,7 +3,7 @@ import { promisify } from 'node:util'
 import { readFileSync } from 'node:fs'
 import { writeFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, basename } from 'node:path'
 import type { EditorFileLike } from '@/app/types/racket'
 
 const execFileAsync = promisify(execFile)
@@ -16,6 +16,12 @@ const RKT_DIR = join(process.cwd(), 'app/api/run')
 const RUNNER_RKT      = readFileSync(join(RKT_DIR, '_runner.rkt'), 'utf8')
 const TRACKING_BLOCK  = readFileSync(join(RKT_DIR, '_tracking.rkt'), 'utf8')
 const STREAM_PARSER_BLOCK = readFileSync(join(RKT_DIR, '_stream-parser.rkt'), 'utf8')
+
+// f.name viene del cliente: rechaza cualquier valor que no sea un nombre de archivo
+// plano (sin '..' ni separadores de ruta) para evitar escribir fuera del tmpdir.
+function isSafeFileName(name: string): boolean {
+  return name.length > 0 && name !== '.' && name !== '..' && basename(name) === name
+}
 
 function injectRuntime(name: string, content: string): string {
   if (name === 'environment.rkt') return content + TRACKING_BLOCK
@@ -49,6 +55,11 @@ export async function POST(request: Request) {
 
     if (files.length === 0) {
       return Response.json({ stdout: '', stderr: 'No hay archivos para ejecutar.', error: 'No files' })
+    }
+
+    const invalidFile = files.find((f) => !isSafeFileName(f.name))
+    if (invalidFile) {
+      return Response.json({ stdout: '', stderr: `Nombre de archivo inválido: ${invalidFile.name}`, error: 'Invalid file name' })
     }
 
     tmpDir = await mkdtemp(join(tmpdir(), 'flp-'))
