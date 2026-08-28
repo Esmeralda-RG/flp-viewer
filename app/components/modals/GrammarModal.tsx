@@ -29,7 +29,13 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
   }, [lexInput, grammarInput])
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      // Evita cerrar el modal (y perder la gramática en curso) cuando Escape
+      // se presiona dentro de un input/textarea, como el del stub o Monaco.
+      if ((e.target as HTMLElement | null)?.closest('input, textarea')) return
+      onClose()
+    }
     globalThis.addEventListener('keydown', handler)
     return () => globalThis.removeEventListener('keydown', handler)
   }, [onClose])
