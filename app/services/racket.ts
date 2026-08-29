@@ -65,7 +65,7 @@ function valueType(v: unknown): string {
 }
 
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
-  return raw.map((snap, i) => {
+  return raw.map((snap) => {
     const s = snap as RawSnapshot
     const frames: Binding[][] = (s.frames ?? []).map(frame =>
       Object.entries(frame).map(([name, val]) => ({
