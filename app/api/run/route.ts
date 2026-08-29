@@ -8,9 +8,7 @@ import type { EditorFileLike } from '@/app/types/racket'
 
 const execFileAsync = promisify(execFile)
 
-const RACKET_BIN =
-  process.env.RACKET_BIN ??
-  '/Applications/Racket v9.1/bin/racket'
+const RACKET_BIN = process.env.RACKET_BIN ?? 'racket'
 
 const RKT_DIR = join(process.cwd(), 'app/api/run')
 const RUNNER_RKT      = readFileSync(join(RKT_DIR, '_runner.rkt'), 'utf8')
