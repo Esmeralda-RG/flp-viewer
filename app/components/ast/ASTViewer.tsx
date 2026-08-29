@@ -55,6 +55,7 @@ export default function ASTViewer({ ast }: Readonly<ASTViewerProps>) {
             isLast={true}
             guides={[]}
             initialOpen={mode !== 'none'}
+            mode={mode}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

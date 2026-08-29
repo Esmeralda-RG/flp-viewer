@@ -36,17 +36,27 @@ export function categorize(type: string): ASTCategory {
   return 'other'
 }
 
-export const CAT: Record<ASTCategory, { border: string; icon: string; ic: string; tc: string; bg: string; bgHover: string }> = {
-  program: { border: '#71717a', icon: '◆', ic: '#a1a1aa', tc: '#e4e4e7', bg: '#27272a',  bgHover: '#3f3f46' },
-  decl:    { border: '#f43f5e', icon: 'D',  ic: '#fb7185', tc: '#fda4af', bg: '#4c0519',  bgHover: '#881337' },
-  cond:    { border: '#eab308', icon: '?',  ic: '#facc15', tc: '#fef08a', bg: '#422006',  bgHover: '#713f12' },
-  call:    { border: '#f97316', icon: '()', ic: '#fb923c', tc: '#fdba74', bg: '#431407',  bgHover: '#7c2d12' },
-  func:    { border: '#06b6d4', icon: 'ƒ',  ic: '#22d3ee', tc: '#67e8f9', bg: '#082f49',  bgHover: '#0c4a6e' },
-  var:     { border: '#8b5cf6', icon: '$',  ic: '#a78bfa', tc: '#c4b5fd', bg: '#2e1065',  bgHover: '#4c1d95' },
-  num:     { border: '#22c55e', icon: '#',  ic: '#4ade80', tc: '#86efac', bg: '#052e16',  bgHover: '#14532d' },
-  bool:    { border: '#f59e0b', icon: '!',  ic: '#fbbf24', tc: '#fcd34d', bg: '#451a03',  bgHover: '#78350f' },
-  op:      { border: '#6366f1', icon: '±',  ic: '#818cf8', tc: '#a5b4fc', bg: '#1e1b4b',  bgHover: '#312e81' },
-  other:   { border: '#3b82f6', icon: '·',  ic: '#60a5fa', tc: '#93c5fd', bg: '#172554',  bgHover: '#1e3a8a' },
+export const CAT: Record<ASTCategory, { border: string; icon: string; ic: string; tc: string; bg: string; bgHover: string; help: string }> = {
+  program: { border: '#71717a', icon: '◆', ic: '#a1a1aa', tc: '#e4e4e7', bg: '#27272a',  bgHover: '#3f3f46',
+    help: 'Nodo raíz del programa — el punto de partida de la evaluación.' },
+  decl:    { border: '#f43f5e', icon: 'D',  ic: '#fb7185', tc: '#fda4af', bg: '#4c0519',  bgHover: '#881337',
+    help: 'Declaración: introduce una o más variables nuevas en el ambiente (como let).' },
+  cond:    { border: '#eab308', icon: '?',  ic: '#facc15', tc: '#fef08a', bg: '#422006',  bgHover: '#713f12',
+    help: 'Condicional: evalúa una condición y elige entre ramas según el resultado.' },
+  call:    { border: '#f97316', icon: '()', ic: '#fb923c', tc: '#fdba74', bg: '#431407',  bgHover: '#7c2d12',
+    help: 'Llamada: aplica un procedimiento a sus argumentos.' },
+  func:    { border: '#06b6d4', icon: 'ƒ',  ic: '#22d3ee', tc: '#67e8f9', bg: '#082f49',  bgHover: '#0c4a6e',
+    help: 'Procedimiento: define una función — parámetros más un cuerpo que se evalúa al llamarla.' },
+  var:     { border: '#8b5cf6', icon: '$',  ic: '#a78bfa', tc: '#c4b5fd', bg: '#2e1065',  bgHover: '#4c1d95',
+    help: 'Variable: una referencia a un identificador que se busca en el ambiente.' },
+  num:     { border: '#22c55e', icon: '#',  ic: '#4ade80', tc: '#86efac', bg: '#052e16',  bgHover: '#14532d',
+    help: 'Literal numérico: un valor que se evalúa a sí mismo, sin necesidad de ambiente.' },
+  bool:    { border: '#f59e0b', icon: '!',  ic: '#fbbf24', tc: '#fcd34d', bg: '#451a03',  bgHover: '#78350f',
+    help: 'Literal booleano: un valor de verdad (#t/#f) que se evalúa a sí mismo.' },
+  op:      { border: '#6366f1', icon: '±',  ic: '#818cf8', tc: '#a5b4fc', bg: '#1e1b4b',  bgHover: '#312e81',
+    help: 'Operación primitiva: aplica una función incorporada como -, zero?, etc.' },
+  other:   { border: '#3b82f6', icon: '·',  ic: '#60a5fa', tc: '#93c5fd', bg: '#172554',  bgHover: '#1e3a8a',
+    help: 'Nodo sin categoría reconocida — revisa su tipo en la gramática.' },
 }
 
 export function renderValue(value: string | number | boolean): string {

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ASTNode } from './ast'
+import type { ASTNode, ExpandMode } from './ast'
 import type { EnvFrame } from './environment'
 import type { EditorFile, GeneratedGrammarFiles } from './editor'
 import type { InitBinding } from './grammar'
@@ -69,12 +69,20 @@ export interface ASTViewerProps {
   ast: ASTNode | null
 }
 
+export interface ASTTooltipProps {
+  anchorRect: DOMRect
+  category: string
+  categoryColor: string
+  text: string
+}
+
 export interface TreeNodeProps {
   node: ASTNode
   depth: number
   isLast: boolean
   guides: boolean[]
   initialOpen: boolean
+  mode: ExpandMode
 }
 
 export interface GrammarModalProps {

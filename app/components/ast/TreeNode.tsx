@@ -1,12 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { TreeNodeProps } from '@/app/types/props'
 import { categorize, renderValue, CAT, ROW_H, GUIDE_W } from '@/app/lib/ast-view'
+import ASTTooltip from './ASTTooltip'
 
-export default function TreeNode({ node, depth, isLast, guides, initialOpen }: Readonly<TreeNodeProps>) {
+const TOOLTIP_DELAY_MS = 400
+
+export default function TreeNode({ node, depth, isLast, guides, initialOpen, mode }: Readonly<TreeNodeProps>) {
   const [open, setOpen] = useState(initialOpen)
   const [hovered, setHovered] = useState(false)
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleMouseEnter = () => {
+    setHovered(true)
+    tooltipTimer.current = setTimeout(() => {
+      setTooltipRect(buttonRef.current?.getBoundingClientRect() ?? null)
+    }, TOOLTIP_DELAY_MS)
+  }
+
+  const handleMouseLeave = () => {
+    setHovered(false)
+    setTooltipRect(null)
+    if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
+  }
 
   const hasKids = !!node.children?.length
   const isLeaf = !hasKids
@@ -43,10 +62,11 @@ export default function TreeNode({ node, depth, isLast, guides, initialOpen }: R
         )}
 
         <button
+          ref={buttonRef}
           type="button"
           onClick={() => hasKids && setOpen(o => !o)}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -61,6 +81,10 @@ export default function TreeNode({ node, depth, isLast, guides, initialOpen }: R
             userSelect: 'none',
           }}
         >
+          {tooltipRect && (
+            <ASTTooltip anchorRect={tooltipRect} category={cat} categoryColor={s.tc} text={s.help} />
+          )}
+
           <span style={{ width: 10, fontSize: 9, color: '#71717a', fontFamily: 'monospace', flexShrink: 0 }}>
             {chevron}
           </span>
@@ -103,7 +127,8 @@ export default function TreeNode({ node, depth, isLast, guides, initialOpen }: R
                 depth={depth + 1}
                 isLast={i === node.children!.length - 1}
                 guides={depth === 0 ? [] : [...guides, !isLast]}
-                initialOpen={false}
+                initialOpen={mode === 'all'}
+                mode={mode}
               />
             ))}
           </div>
