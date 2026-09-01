@@ -108,6 +108,9 @@ export interface HelpDrawerProps {
   open: boolean
   onClose: () => void
   sections: HelpSection[]
+  examples: Example[]
+  currentExampleId?: string
+  onLoadExample: (example: Example) => void
 }
 
 export interface MarkdownChildrenProps {

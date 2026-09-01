@@ -13,12 +13,14 @@ export function useProjectFiles(examples: Example[]) {
     defaultExample?.files?.map((f) => ({ ...f, revision: 0 })) ?? INITIAL_FILES
   )
   const [activeFileId, setActiveFileId] = useState(defaultExample?.activeFileId ?? 'main')
+  const [currentExampleId, setCurrentExampleId] = useState(defaultExample?.id)
 
   const updateFile = useCallback((id: string, content: string) => {
     setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, content } : f)))
   }, [])
 
   const loadExample = useCallback((example: Example) => {
+    setCurrentExampleId(example.id)
     if (example.files) {
       setFiles((prev) => {
         const revMap = new Map(prev.map((f) => [f.id, f.revision]))
@@ -72,7 +74,7 @@ export function useProjectFiles(examples: Example[]) {
   }, [files])
 
   return {
-    files, activeFileId, setActiveFileId, updateFile,
+    files, activeFileId, setActiveFileId, updateFile, currentExampleId,
     loadExample, applyGeneratedGrammar, getInitEnvBindings, applyInitEnv, download,
   }
 }

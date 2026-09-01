@@ -122,7 +122,14 @@ export default function PlaygroundLayout({ examples, helpSections, glossaryTerms
         />
       )}
 
-      <HelpDrawer open={helpOpen} onClose={() => setHelpOpen(false)} sections={helpSections} />
+      <HelpDrawer
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        sections={helpSections}
+        examples={examples}
+        currentExampleId={projectFiles.currentExampleId}
+        onLoadExample={handleExampleSelect}
+      />
 
       <WelcomeModal />
     </div>

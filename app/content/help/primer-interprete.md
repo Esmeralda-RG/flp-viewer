@@ -3,13 +3,14 @@ id: primer-interprete
 icon: "🧩"
 title: "Tu primer intérprete"
 order: 4
+relatedExample: let-expresiones
 ---
 
 # Tu primer intérprete
 
 Aquí ves cómo encajan todas las piezas de un intérprete, de principio a fin, usando el Lenguaje LET.
 
-> 👉 **Carga el ejemplo _Lenguaje LET_**. Trae tres archivos ya completos; recórrelos mientras lees.
+> Trae tres archivos ya completos; recórrelos mientras lees.
 
 ## Los tres archivos
 

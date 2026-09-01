@@ -3,13 +3,14 @@ id: closures
 icon: "📦"
 title: "Cierres (Closures)"
 order: 7
+relatedExample: cierres
 ---
 
 # Cierres (Closures)
 
 Un **cierre** es un procedimiento que "recuerda" el ambiente en el que fue creado. Es lo que permite que una función use variables que estaban a la vista cuando se definió.
 
-> 👉 **Carga el ejemplo _Procedimientos y cierres_**. Agrega `proc` y `call` sobre el Lenguaje LET.
+> Agrega `proc` y `call` sobre el Lenguaje LET.
 
 ## Crear y llamar un procedimiento
 

@@ -9,6 +9,7 @@ const FrontmatterSchema = z.object({
   icon:  z.string().min(1),
   title: z.string().min(1),
   order: z.coerce.number().default(Number.MAX_SAFE_INTEGER),
+  relatedExample: z.string().min(1).optional(),
 })
 
 export function loadHelpSections(): HelpSection[] {

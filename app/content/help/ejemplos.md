@@ -3,13 +3,14 @@ id: ejemplos
 icon: "🧪"
 title: "Explorar el intérprete avanzado"
 order: 9
+relatedExample: eopl-template
 ---
 
 # Intérprete EOPL (avanzado)
 
 Una vez recorridos los ejemplos mínimos, este es un intérprete **completo** para experimentar libremente. No usa la sintaxis tradicional de EOPL, sino una propia más cercana a un lenguaje real.
 
-> 👉 **Carga el ejemplo _Intérprete EOPL (avanzado)_**. Es un proyecto extenso: úsalo como referencia, no para aprender un concepto puntual.
+> Es un proyecto extenso: úsalo como referencia, no para aprender un concepto puntual.
 
 ## Qué incorpora
 

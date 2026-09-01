@@ -3,13 +3,14 @@ id: uso
 icon: "🚀"
 title: "Cómo usar FLP Viewer"
 order: 1
+relatedExample: hola-mundo
 ---
 
 # Cómo usar FLP Viewer
 
 FLP Viewer es un playground para escribir y explorar intérpretes en Racket/EOPL. Cada concepto del curso tiene un **ejemplo** (código mínimo ejecutable) y una **ayuda** (esta guía) que lo explica.
 
-> 👉 **Carga el ejemplo _Hola Mundo_** desde la biblioteca para dar tus primeros pasos.
+> Desde la biblioteca para dar tus primeros pasos.
 
 ## Los cuatro paneles
 

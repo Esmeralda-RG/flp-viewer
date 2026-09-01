@@ -3,13 +3,14 @@ id: estado
 icon: "🔄"
 title: "Estado y asignación"
 order: 8
+relatedExample: estado
 ---
 
 # Estado y asignación
 
 Hasta ahora una variable conservaba el valor que se le ligó. Un lenguaje con **estado** permite además **cambiar** ese valor más adelante. Aquí aparece una distinción que suele confundirse: **ligadura** vs. **asignación**.
 
-> 👉 **Carga el ejemplo _Estado y asignación_**. Agrega `set` y `begin` sobre el Lenguaje LET, y guarda los valores en celdas mutables (referencias).
+> Agrega `set` y `begin` sobre el Lenguaje LET, y guarda los valores en celdas mutables (referencias).
 
 ## Ligadura (binding)
 

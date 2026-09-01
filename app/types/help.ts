@@ -4,4 +4,5 @@ export interface HelpSection {
   title: string
   order: number
   md: string
+  relatedExample?: string
 }

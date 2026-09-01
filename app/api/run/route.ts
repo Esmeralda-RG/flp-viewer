@@ -5,6 +5,7 @@ import { writeFile, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, basename } from 'node:path'
 import type { EditorFileLike } from '@/app/types/racket'
+import { withRunSlot } from '@/app/lib/run-queue'
 
 const execFileAsync = promisify(execFile)
 
@@ -65,14 +66,16 @@ export async function POST(request: Request) {
     await Promise.all(files.map((f) => writeFile(join(tmpDir!, f.name), injectRuntime(f.name, f.content), 'utf8')))
     await writeFile(join(tmpDir, '_runner.rkt'), RUNNER_RKT, 'utf8')
 
-    const { stdout, stderr } = await execFileAsync(
-      RACKET_BIN,
-      [join(tmpDir, '_runner.rkt'), testInput],
-      {
-        timeout: 15_000,
-        signal: request.signal,
-        env: { ...process.env, PLTDISABLE_BROWSER_REDIRECT: '1' },
-      },
+    const { stdout, stderr } = await withRunSlot(request.signal, () =>
+      execFileAsync(
+        RACKET_BIN,
+        [join(tmpDir!, '_runner.rkt'), testInput],
+        {
+          timeout: 15_000,
+          signal: request.signal,
+          env: { ...process.env, PLTDISABLE_BROWSER_REDIRECT: '1' },
+        },
+      ),
     )
 
     let steps: unknown[] | null = null

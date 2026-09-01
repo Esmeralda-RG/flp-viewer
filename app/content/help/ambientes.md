@@ -3,13 +3,14 @@ id: ambientes
 icon: "🌐"
 title: "Ambientes"
 order: 6
+relatedExample: ambientes
 ---
 
 # Ambientes
 
 Un **ambiente** asocia identificadores con sus valores. Es la estructura que el intérprete consulta cada vez que aparece una variable.
 
-> 👉 **Carga el ejemplo _Ambientes_**. Usa el mismo Lenguaje LET, pero arranca con variables predefinidas para que puedas explorarlas.
+> Usa el mismo Lenguaje LET, pero arranca con variables predefinidas para que puedas explorarlas.
 
 ## La interfaz del ambiente
 
