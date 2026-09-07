@@ -1,4 +1,5 @@
-import type { GrammarAST, GrammarRule, Production, BNFItem } from './bnf-parser'
+import type { GrammarAST, GrammarRule, Production, BNFItem } from '@/app/types/bnf'
+import type { RuleKind, MainGeneratorResult } from '@/app/types/grammar'
 
 // ─── auxiliares ───────────────────────────────────────────────────────────────
 
@@ -70,8 +71,6 @@ function collectFields(items: BNFItem[]): string[] {
 
 // ─── clasificación de reglas ──────────────────────────────────────────────────
 
-type RuleKind = 'program' | 'expression' | 'primitive' | 'other'
-
 function ruleKind(rule: GrammarRule): RuleKind {
   const s = sym(rule.lhs)
   if (s === 'program') return 'program'
@@ -109,9 +108,6 @@ function fnComment(kind: RuleKind, fn: string, lhs: string): string {
   if (kind === 'primitive') return `; ${fn}: <${lhs}> <args> -> valor`
   return `; ${fn}: <${lhs}> <environment> -> valor`
 }
-
-import type { MainGeneratorResult } from '@/app/types/grammar'
-export type { MainGeneratorResult }
 
 // ─── generador ────────────────────────────────────────────────────────────────
 

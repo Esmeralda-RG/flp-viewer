@@ -3,6 +3,12 @@ export interface InitBinding {
   value: string
 }
 
+export interface InitEnvRow extends InitBinding {
+  id: string
+}
+
+export type RuleKind = 'program' | 'expression' | 'primitive' | 'other'
+
 export interface PipelineResult {
   grammarRkt: string
   environmentRkt: string

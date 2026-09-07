@@ -1,6 +1,4 @@
-import { type Token, type TokenKind } from './bnf-lexer'
-import type { BNFItem, Production, GrammarRule, GrammarAST } from '@/app/types/bnf'
-export type { BNFItem, Production, GrammarRule, GrammarAST }
+import type { Token, TokenKind, BNFItem, Production, GrammarRule, GrammarAST } from '@/app/types/bnf'
 
 // ---------------------------------------------------------------------------
 // Analizador sintáctico

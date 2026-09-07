@@ -3,13 +3,14 @@ id: bnf
 icon: "📐"
 title: "Notación BNF"
 order: 2
+relatedExample: let-expresiones
 ---
 
 # Notación BNF
 
 La **Forma de Backus-Naur** (BNF) es el lenguaje con el que describes la sintaxis de tu intérprete: qué expresiones son válidas y cómo se componen.
 
-> 👉 **Carga el ejemplo _Lenguaje LET_** para ver una gramática completa y pequeña en acción.
+> Para ver una gramática completa y pequeña en acción.
 
 ## Sintaxis básica
 

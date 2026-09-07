@@ -127,9 +127,3 @@ app/
   types/            → Tipos TypeScript compartidos
 examples/           → Plantillas de ejemplo (eopl-template, hola-mundo)
 ```
-
----
-
-## Despliegue
-
-Ver [DEPLOY.md](./DEPLOY.md) para instrucciones de despliegue en VPS con Docker, Nginx y Let's Encrypt.

@@ -3,13 +3,14 @@ id: evaluacion
 icon: "▶️"
 title: "Evaluación"
 order: 5
+relatedExample: let-expresiones
 ---
 
 # Evaluación
 
 Evaluar es transformar un **AST** en un **valor**, recorriendo el árbol de forma recursiva.
 
-> 👉 **Carga el ejemplo _Lenguaje LET_** y abre `main.rkt`: aquí explicamos su `eval-expression` caso por caso.
+> Abre `main.rkt`: aquí explicamos su `eval-expression` caso por caso.
 
 ## eval-expression
 

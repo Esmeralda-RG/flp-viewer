@@ -3,13 +3,14 @@ id: sllgen
 icon: "⚙️"
 title: "SLLGEN"
 order: 3
+relatedExample: let-expresiones
 ---
 
 # SLLGEN
 
 SLLGEN es el generador de analizadores incluido en `#lang eopl`. Convierte tu especificación léxica y tu gramática en funciones de Racket: un *scanner* (que parte el texto en tokens) y un *parser* (que arma el AST).
 
-> 👉 **Carga el ejemplo _Lenguaje LET_** y abre el archivo `grammar.rkt` para ver lo que se describe aquí.
+> Abre el archivo `grammar.rkt` para ver lo que se describe aquí.
 
 ## Especificación léxica
 

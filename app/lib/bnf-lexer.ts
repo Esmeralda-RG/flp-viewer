@@ -1,5 +1,4 @@
 import type { TokenKind, Token } from '@/app/types/bnf'
-export type { TokenKind, Token }
 
 export class LexError extends Error {
   constructor(message: string, public line: number, public col: number) {

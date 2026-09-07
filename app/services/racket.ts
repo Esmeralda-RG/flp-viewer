@@ -1,10 +1,6 @@
 import type { ASTNode } from '@/app/types/ast'
 import type { EnvFrame, Binding } from '@/app/types/environment'
-import type { EditorFileLike, StepResult, TraceResult } from '@/app/types/racket'
-export type { EditorFileLike, StepResult, TraceResult }
-
-// Re-exportar para compatibilidad
-export type { ASTNode, EnvFrame, Binding }
+import type { EditorFileLike, StepResult, TraceResult, RawSnapshot } from '@/app/types/racket'
 
 // ── Conversión del AST ────────────────────────────────────────────────────────
 
@@ -68,13 +64,8 @@ function valueType(v: unknown): string {
   return 'unknown'
 }
 
-interface RawSnapshot {
-  tag: string
-  frames: Record<string, unknown>[]
-}
-
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
-  return raw.map((snap, i) => {
+  return raw.map((snap) => {
     const s = snap as RawSnapshot
     const frames: Binding[][] = (s.frames ?? []).map(frame =>
       Object.entries(frame).map(([name, val]) => ({

@@ -23,6 +23,14 @@ export const INITIAL_FILES: EditorFile[] = [
   },
 ]
 
+export const FILE_EXT_COLORS: Record<string, string> = {
+  rkt: 'text-red-400',
+  g: 'text-yellow-400',
+  lark: 'text-yellow-400',
+  ebnf: 'text-yellow-400',
+  txt: 'text-zinc-400',
+}
+
 export function upsertFile(
   prev: EditorFile[],
   id: string,
@@ -49,11 +57,12 @@ function prepareForDownload(file: EditorFile): EditorFile {
 
 export async function downloadZip(files: EditorFile[], zipName = 'flp-project.zip') {
   const zip = new JSZip()
+  // fecha fija en el pasado: evita timestamps futuros que algunos unzippers rechazan
+  const zipDate = new Date()
+  zipDate.setDate(zipDate.getDate() - 1)
   for (const f of files) {
     const prepared = prepareForDownload(f)
-    const _yesterday = new Date()
-    _yesterday.setDate(_yesterday.getDate() - 1)
-    zip.file(prepared.name, prepared.content, { date: _yesterday })
+    zip.file(prepared.name, prepared.content, { date: zipDate })
   }
   const blob = await zip.generateAsync({ type: 'blob' })
   const url = URL.createObjectURL(blob)
