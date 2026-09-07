@@ -28,7 +28,6 @@ ENV HOSTNAME=0.0.0.0
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/app/api/run/_runner.rkt \
                     /app/app/api/run/_tracking.rkt \
                     /app/app/api/run/_stream-parser.rkt \
