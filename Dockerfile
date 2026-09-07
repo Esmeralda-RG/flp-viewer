@@ -17,7 +17,8 @@ RUN pnpm build
 FROM node:25-bookworm-slim AS runner
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN groupadd --system app && useradd --system --gid app --create-home app \
+    && apt-get update && apt-get install -y --no-install-recommends \
     racket \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,12 +27,13 @@ ENV RACKET_BIN=/usr/bin/racket
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/app/api/run/_runner.rkt \
+COPY --chown=app:app --from=builder /app/.next/standalone ./
+COPY --chown=app:app --from=builder /app/.next/static ./.next/static
+COPY --chown=app:app --from=builder /app/app/api/run/_runner.rkt \
                     /app/app/api/run/_tracking.rkt \
                     /app/app/api/run/_stream-parser.rkt \
                     ./app/api/run/
 
+USER app
 EXPOSE 3000
 CMD ["node", "server.js"]
