@@ -48,6 +48,7 @@ export function useProjectFiles(examples: Example[]) {
       next = upsertFile(next, 'grammar-rkt', 'grammar.rkt', generated.grammarRkt, 'scheme')
       next = upsertFile(next, 'environment-rkt', 'environment.rkt', generated.environmentRkt, 'scheme')
       next = upsertFile(next, 'main', 'main.rkt', generated.mainRkt, 'scheme', generated.mainLockedLines)
+      next = upsertFile(next, 'utils', 'utils.rkt', generated.utilsRkt, 'scheme')
       return next
     })
     setActiveFileId('main')

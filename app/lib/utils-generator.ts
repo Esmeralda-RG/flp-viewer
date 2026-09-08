@@ -170,5 +170,14 @@ export function generateUtilsRkt(): string {
   (if (= n 0)
       x
       (iterate f (- n 1) (f x))))
+
+;;; Como fold-left, pero recorre DOS listas en paralelo (misma longitud).
+;;; Útil para reducir los campos que genera un (<a> <b>)* de la gramática:
+;;; SLLGEN los expande en dos listas paralelas, no en una lista de pares.
+;;; (fold-left-2 f init ops vals) = (... (f (f init op1 val1) op2 val2) ...)
+(define (fold-left-2 f init ops vals)
+  (if (null? ops)
+      init
+      (fold-left-2 f (f init (car ops) (car vals)) (cdr ops) (cdr vals))))
 `
 }

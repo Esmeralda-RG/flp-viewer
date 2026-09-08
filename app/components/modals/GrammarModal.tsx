@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { runPipeline } from '@/app/lib/grammar-pipeline'
+import { generateUtilsRkt } from '@/app/lib/utils-generator'
 import { DEFAULT_LEX, DEFAULT_GRAMMAR, EDITOR_OPTIONS } from '@/app/lib/grammar-defaults'
 import type { GrammarModalProps } from '@/app/types/props'
 import GrammarPreview from './GrammarPreview'
@@ -58,6 +59,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
       environmentRkt: result.environmentRkt,
       mainRkt: result.mainRkt,
       mainLockedLines: result.mainLockedLines,
+      utilsRkt: generateUtilsRkt(),
     })
   }
 
@@ -74,7 +76,10 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
   } else if (canGenerate) {
     statusMessage = (
       <div className="text-xs text-green-400 flex-1">
-        ✓ Listo — se generarán: main.rkt, grammar.rkt, environment.rkt, grammar-input.bnf
+        <span className="block">✓ Listo — se generarán: main.rkt, grammar.rkt, environment.rkt, utils.rkt, grammar-input.bnf</span>
+        <span className="block text-[10px] text-zinc-500 mt-0.5">
+          utils.rkt es Racket puro — trae funciones auxiliares de base (recursión, listas, etc.) que puedes usar desde main.rkt. Regenerar sobrescribe cualquier función propia que hayas agregado ahí.
+        </span>
       </div>
     )
   } else {

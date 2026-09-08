@@ -14,4 +14,5 @@ export interface GeneratedGrammarFiles {
   environmentRkt: string
   mainRkt: string
   mainLockedLines: number[]
+  utilsRkt: string
 }

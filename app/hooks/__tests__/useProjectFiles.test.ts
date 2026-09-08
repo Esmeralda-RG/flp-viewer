@@ -78,12 +78,14 @@ describe('useProjectFiles', () => {
         environmentRkt: 'env code',
         mainRkt: 'main code',
         mainLockedLines: [1, 2],
+        utilsRkt: 'utils code',
       })
     )
     expect(result.current.files.find(f => f.id === 'grammar-input')?.content).toBe('bnf input')
     expect(result.current.files.find(f => f.id === 'grammar-rkt')?.content).toBe('grammar code')
     expect(result.current.files.find(f => f.id === 'environment-rkt')?.content).toBe('env code')
     expect(result.current.files.find(f => f.id === 'main')?.content).toBe('main code')
+    expect(result.current.files.find(f => f.id === 'utils')?.content).toBe('utils code')
     expect(result.current.activeFileId).toBe('main')
   })
 
@@ -101,6 +103,7 @@ describe('useProjectFiles', () => {
         environmentRkt: `(define init-env (lambda () (extend-env '(x) '(1) (empty-env))))`,
         mainRkt: '',
         mainLockedLines: [],
+        utilsRkt: '',
       })
     )
     expect(result.current.getInitEnvBindings()).toEqual([{ name: 'x', value: '1' }])
@@ -122,6 +125,7 @@ describe('useProjectFiles', () => {
         environmentRkt: `(define init-env\n  (lambda ()\n    (empty-env)))`,
         mainRkt: '',
         mainLockedLines: [],
+        utilsRkt: '',
       })
     )
     act(() => result.current.applyInitEnv([{ name: 'y', value: '2' }]))
