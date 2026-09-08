@@ -21,3 +21,5 @@ export interface MainGeneratorResult {
   content: string
   lockedLines: number[]
 }
+
+export type NextNameFn = (base: string, plural?: boolean) => string

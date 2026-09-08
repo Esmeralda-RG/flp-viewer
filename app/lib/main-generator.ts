@@ -1,5 +1,5 @@
-import type { GrammarAST, GrammarRule, BNFItem } from '@/app/types/bnf'
-import type { RuleKind, MainGeneratorResult } from '@/app/types/grammar'
+import type { GrammarAST, GrammarRule, BNFItem, GroupItem } from '@/app/types/bnf'
+import type { RuleKind, MainGeneratorResult, NextNameFn } from '@/app/types/grammar'
 import { sym, autoVariantName } from './grammar-naming'
 import { isSeparatedListGroup } from './eopl-generator'
 
@@ -42,27 +42,29 @@ function collectFields(items: BNFItem[]): string[] {
         fields.push(nextName(fieldBase(item.name), true))
         break
       case 'group':
-        if (!item.op) {
-          fields.push(...collectFields(item.items))
-        } else if (isSeparatedListGroup(item)) {
-          // `(separated-list elem sep)`: SLLGEN genera un único campo,
-          // lista de `elem` — verificado con eopl real.
-          fields.push(nextName('items'))
-        } else {
-          // `arbno` genérico multi-símbolo: SLLGEN expande un campo por
-          // cada símbolo NO terminal dentro del grupo (listas paralelas),
-          // no un único campo de tuplas — verificado con eopl real.
-          for (const sub of item.items) {
-            if (sub.kind === 'terminal') continue
-            if (sub.kind === 'group') {
-              fields.push(nextName('items'))
-            } else {
-              fields.push(nextName(fieldBase(sub.name), true))
-            }
-          }
-        }
+        fields.push(...collectGroupFields(item, nextName))
         break
     }
+  }
+  return fields
+}
+
+// Un grupo sin cuantificador solo aplana sus items en el nivel actual. Uno
+// con cuantificador ('*'/'+'/'?') se vuelve campo(s) de lista: el patrón
+// separated-list produce uno solo; un arbno genérico multi-símbolo produce
+// uno por cada símbolo no terminal (listas paralelas), no un único campo de
+// tuplas — ambos casos verificados ejecutando eopl real.
+function collectGroupFields(item: GroupItem, nextName: NextNameFn): string[] {
+  if (!item.op) return collectFields(item.items)
+  if (isSeparatedListGroup(item)) return [nextName('items')]
+  return arbnoFieldNames(item.items, nextName)
+}
+
+function arbnoFieldNames(items: BNFItem[], nextName: NextNameFn): string[] {
+  const fields: string[] = []
+  for (const sub of items) {
+    if (sub.kind === 'terminal') continue
+    fields.push(sub.kind === 'group' ? nextName('items') : nextName(fieldBase(sub.name), true))
   }
   return fields
 }
