@@ -6,91 +6,148 @@ export class LexError extends Error {
   }
 }
 
-export function tokenize(input: string): Token[] {
-  const tokens: Token[] = []
-  let i = 0
-  let line = 1
-  let lineStart = 0
+const PUNCTUATION: Partial<Record<string, TokenKind>> = {
+  '|': 'ALT',
+  '(': 'LPAREN',
+  ')': 'RPAREN',
+  '[': 'LBRACKET',
+  ']': 'RBRACKET',
+  '*': 'STAR',
+  '+': 'PLUS',
+  '?': 'QUESTION',
+}
 
-  const col = () => i - lineStart + 1
-  const push = (kind: TokenKind, value: string) => tokens.push({ kind, value, line, col: col() - value.length })
+class Lexer {
+  private i = 0
+  private line = 1
+  private lineStart = 0
+  private readonly tokens: Token[] = []
 
-  while (i < input.length) {
-    const ch = input[i]
+  constructor(private readonly input: string) {}
 
-    // Salto de línea — actualizar número de línea
-    if (ch === '\n') { line++; lineStart = ++i; continue }
-
-    // Espacios en blanco
-    if (ch === ' ' || ch === '\t' || ch === '\r') { i++; continue }
-
-    // Comentarios de línea: ; // #
-    if (ch === ';' || (ch === '/' && input[i + 1] === '/') || ch === '#') {
-      while (i < input.length && input[i] !== '\n') i++
-      continue
-    }
-
-    // <no-terminal>
-    if (ch === '<') {
-      const start = i++
-      let name = ''
-      while (i < input.length && input[i] !== '>' && input[i] !== '\n') name += input[i++]
-      if (input[i] !== '>') throw new LexError('Se esperaba ">" para cerrar el no-terminal', line, col())
-      i++
-      tokens.push({ kind: 'NONTERMINAL', value: name.trim(), line, col: start - lineStart + 1 })
-      continue
-    }
-
-    // Terminal entre comillas "..." o '...'
-    if (ch === '"' || ch === "'") {
-      const quote = ch
-      const startCol = col()
-      i++
-      let value = ''
-      while (i < input.length && input[i] !== quote) {
-        if (input[i] === '\\') i++
-        value += input[i++]
-      }
-      if (i >= input.length) throw new LexError(`Terminal sin cerrar (falta ${quote})`, line, startCol)
-      i++ // comilla de cierre
-      tokens.push({ kind: 'TERMINAL', value, line, col: startCol })
-      continue
-    }
-
-    // ::=
-    if (input.slice(i, i + 3) === '::=') {
-      push('PRODUCES', '::='); i += 3; continue
-    }
-
-    // =>
-    if (input.slice(i, i + 2) === '=>') {
-      push('ARROW', '=>'); i += 2; continue
-    }
-
-    // Tokens de un solo carácter
-    if (ch === '|') { push('ALT', ch); i++; continue }
-    if (ch === '(') { push('LPAREN', ch); i++; continue }
-    if (ch === ')') { push('RPAREN', ch); i++; continue }
-    if (ch === '[') { push('LBRACKET', ch); i++; continue }
-    if (ch === ']') { push('RBRACKET', ch); i++; continue }
-    if (ch === '*') { push('STAR', ch); i++; continue }
-    if (ch === '+') { push('PLUS', ch); i++; continue }
-    if (ch === '?') { push('QUESTION', ch); i++; continue }
-
-    // Identificador simple (nombres de variante o keywords sin comillas)
-    // Incluye ? y - para que nombres como empty?-prim sean un solo token
-    if (/[a-zA-Z_]/.test(ch)) {
-      const startCol = col()
-      let value = ''
-      while (i < input.length && /[a-zA-Z0-9_\-?]/.test(input[i])) value += input[i++]
-      tokens.push({ kind: 'IDENT', value, line, col: startCol })
-      continue
-    }
-
-    // Ignorar caracteres desconocidos
-    i++
+  private col(): number {
+    return this.i - this.lineStart + 1
   }
 
-  tokens.push({ kind: 'EOF', value: '', line, col: col() })
-  return tokens
+  private push(kind: TokenKind, value: string): void {
+    this.tokens.push({ kind, value, line: this.line, col: this.col() - value.length })
+  }
+
+  private skipNewline(): boolean {
+    if (this.input[this.i] !== '\n') return false
+    this.line++
+    this.lineStart = ++this.i
+    return true
+  }
+
+  private skipWhitespace(): boolean {
+    const ch = this.input[this.i]
+    if (ch !== ' ' && ch !== '\t' && ch !== '\r') return false
+    this.i++
+    return true
+  }
+
+  private skipComment(): boolean {
+    const ch = this.input[this.i]
+    const isComment = ch === ';' || ch === '#' || (ch === '/' && this.input[this.i + 1] === '/')
+    if (!isComment) return false
+    while (this.i < this.input.length && this.input[this.i] !== '\n') this.i++
+    return true
+  }
+
+  // <no-terminal>
+  private readNonterminal(): boolean {
+    if (this.input[this.i] !== '<') return false
+    const start = this.i++
+    let name = ''
+    while (this.i < this.input.length && this.input[this.i] !== '>' && this.input[this.i] !== '\n') {
+      name += this.input[this.i++]
+    }
+    if (this.input[this.i] !== '>') {
+      throw new LexError('Se esperaba ">" para cerrar el no-terminal', this.line, this.col())
+    }
+    this.i++
+    this.tokens.push({ kind: 'NONTERMINAL', value: name.trim(), line: this.line, col: start - this.lineStart + 1 })
+    return true
+  }
+
+  // Terminal entre comillas "..." o '...'
+  private readQuotedTerminal(): boolean {
+    const quote = this.input[this.i]
+    if (quote !== '"' && quote !== "'") return false
+    const startCol = this.col()
+    this.i++
+    let value = ''
+    while (this.i < this.input.length && this.input[this.i] !== quote) {
+      if (this.input[this.i] === '\\') this.i++
+      value += this.input[this.i++]
+    }
+    if (this.i >= this.input.length) {
+      throw new LexError(`Terminal sin cerrar (falta ${quote})`, this.line, startCol)
+    }
+    this.i++ // comilla de cierre
+    this.tokens.push({ kind: 'TERMINAL', value, line: this.line, col: startCol })
+    return true
+  }
+
+  // ::= y =>
+  private readMultiCharOperator(): boolean {
+    if (this.input.slice(this.i, this.i + 3) === '::=') {
+      this.push('PRODUCES', '::=')
+      this.i += 3
+      return true
+    }
+    if (this.input.slice(this.i, this.i + 2) === '=>') {
+      this.push('ARROW', '=>')
+      this.i += 2
+      return true
+    }
+    return false
+  }
+
+  private readPunctuation(): boolean {
+    const kind = PUNCTUATION[this.input[this.i]]
+    if (!kind) return false
+    this.push(kind, this.input[this.i])
+    this.i++
+    return true
+  }
+
+  // Identificador simple (nombres de variante o keywords sin comillas)
+  // Incluye ? y - para que nombres como empty?-prim sean un solo token
+  private readIdent(): boolean {
+    if (!/[a-zA-Z_]/.test(this.input[this.i])) return false
+    const startCol = this.col()
+    let value = ''
+    while (this.i < this.input.length && /[a-zA-Z0-9_\-?]/.test(this.input[this.i])) {
+      value += this.input[this.i++]
+    }
+    this.tokens.push({ kind: 'IDENT', value, line: this.line, col: startCol })
+    return true
+  }
+
+  private readonly matchers: Array<() => boolean> = [
+    () => this.skipNewline(),
+    () => this.skipWhitespace(),
+    () => this.skipComment(),
+    () => this.readNonterminal(),
+    () => this.readQuotedTerminal(),
+    () => this.readMultiCharOperator(),
+    () => this.readPunctuation(),
+    () => this.readIdent(),
+  ]
+
+  tokenize(): Token[] {
+    while (this.i < this.input.length) {
+      const matched = this.matchers.some((match) => match())
+      if (!matched) this.i++ // Ignorar caracteres desconocidos
+    }
+
+    this.tokens.push({ kind: 'EOF', value: '', line: this.line, col: this.col() })
+    return this.tokens
+  }
+}
+
+export function tokenize(input: string): Token[] {
+  return new Lexer(input).tokenize()
 }

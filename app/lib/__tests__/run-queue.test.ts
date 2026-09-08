@@ -30,12 +30,12 @@ describe('withRunSlot', () => {
     const runs = Array.from({ length: cpuCount + 1 }, (_, i) => makeSlow(i))
     await new Promise((r) => setTimeout(r, 10))
 
-    expect(order.length).toBe(cpuCount)
+    expect(order).toHaveLength(cpuCount)
 
     blockers[0]()
     await runs[0]
     await new Promise((r) => setTimeout(r, 10))
-    expect(order.length).toBe(cpuCount + 1)
+    expect(order).toHaveLength(cpuCount + 1)
 
     blockers.slice(1).forEach((resolve) => resolve())
     await Promise.all(runs)

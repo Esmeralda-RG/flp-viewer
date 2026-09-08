@@ -8,6 +8,7 @@ export default defineConfig({
     setupFiles: ['./app/components/__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
+      reporter: ['text', 'lcov'],
       all: true,
       include: ['app/**/*.{ts,tsx}'],
       exclude: ['app/types/**', '**/__tests__/**'],

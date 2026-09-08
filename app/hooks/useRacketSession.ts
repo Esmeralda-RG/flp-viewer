@@ -35,6 +35,26 @@ export function useRacketSession() {
     showStep(next)
   }, [pendingSteps, showStep])
 
+  const finishWithLastStep = useCallback((steps: StepResult[]) => {
+    steps.forEach((step) => {
+      const { message, level } = classifyStepOutput(step.output)
+      addLog(message, level)
+    })
+    const last = steps.at(-1)
+    if (last?.ast) setAst(last.ast)
+    if (last && last.environments.length > 0) setFrames(last.environments)
+  }, [addLog])
+
+  const handleSteps = useCallback((steps: StepResult[]) => {
+    if (stepMode && steps.length > 1) {
+      const [first, ...rest] = steps
+      showStep(first)
+      setPendingSteps(rest)
+      return
+    }
+    finishWithLastStep(steps)
+  }, [stepMode, showStep, finishWithLastStep])
+
   const run = useCallback(async (files: EditorFileLike[]) => {
     if (running) return
     const expr = testInput.trim()
@@ -56,21 +76,7 @@ export function useRacketSession() {
       if (result.stderr) {
         result.stderr.split('\n').filter(Boolean).forEach((line) => addLog(line, 'error'))
       } else if (result.steps.length > 0) {
-        if (stepMode && result.steps.length > 1) {
-          const [first, ...rest] = result.steps
-          showStep(first)
-          setPendingSteps(rest)
-        } else {
-          result.steps.forEach((step) => {
-            const { message, level } = classifyStepOutput(step.output)
-            addLog(message, level)
-          })
-          const last = result.steps.at(-1)
-          if (last) {
-            if (last.ast) setAst(last.ast)
-            if (last.environments.length > 0) setFrames(last.environments)
-          }
-        }
+        handleSteps(result.steps)
       }
     } catch (err: unknown) {
       const isAbort = err instanceof Error && err.name === 'AbortError'
@@ -81,7 +87,7 @@ export function useRacketSession() {
       setRunning(false)
       abortRef.current = null
     }
-  }, [testInput, running, stepMode, addLog, showStep])
+  }, [testInput, running, addLog, handleSteps])
 
   const start = useCallback(() => setSessionActive(true), [])
 

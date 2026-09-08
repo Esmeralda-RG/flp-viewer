@@ -40,51 +40,54 @@ export default function ConsoleOutput({
     ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`
   }, [inputValue])
 
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault()
+    if (!sessionActive || running || !inputValue.trim()) return
+    const val = inputValue.trim()
+    setHistory(prev => prev.at(-1) === val ? prev : [...prev, val])
+    setHistoryIndex(-1)
+    setDraft('')
+    onSubmit()
+  }
+
+  const handleArrowUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const ta = e.currentTarget
+    if (ta.value.slice(0, ta.selectionStart ?? 0).includes('\n')) return
+    if (history.length === 0) return
+    e.preventDefault()
+    if (historyIndex === -1) {
+      setDraft(inputValue)
+      const idx = history.length - 1
+      setHistoryIndex(idx)
+      onInputChange(history[idx])
+      return
+    }
+    if (historyIndex > 0) {
+      const idx = historyIndex - 1
+      setHistoryIndex(idx)
+      onInputChange(history[idx])
+    }
+  }
+
+  const handleArrowDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (historyIndex === -1) return
+    const ta = e.currentTarget
+    if (ta.value.slice(ta.selectionStart ?? ta.value.length).includes('\n')) return
+    e.preventDefault()
+    if (historyIndex >= history.length - 1) {
+      setHistoryIndex(-1)
+      onInputChange(draft)
+      return
+    }
+    const idx = historyIndex + 1
+    setHistoryIndex(idx)
+    onInputChange(history[idx])
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (sessionActive && !running && inputValue.trim()) {
-        const val = inputValue.trim()
-        setHistory(prev => prev.at(-1) === val ? prev : [...prev, val])
-        setHistoryIndex(-1)
-        setDraft('')
-        onSubmit()
-      }
-      return
-    }
-
-    if (e.key === 'ArrowUp') {
-      const ta = e.currentTarget
-      if (ta.value.slice(0, ta.selectionStart ?? 0).includes('\n')) return
-      if (history.length === 0) return
-      e.preventDefault()
-      if (historyIndex === -1) {
-        setDraft(inputValue)
-        const idx = history.length - 1
-        setHistoryIndex(idx)
-        onInputChange(history[idx])
-      } else if (historyIndex > 0) {
-        const idx = historyIndex - 1
-        setHistoryIndex(idx)
-        onInputChange(history[idx])
-      }
-      return
-    }
-
-    if (e.key === 'ArrowDown') {
-      if (historyIndex === -1) return
-      const ta = e.currentTarget
-      if (ta.value.slice(ta.selectionStart ?? ta.value.length).includes('\n')) return
-      e.preventDefault()
-      if (historyIndex >= history.length - 1) {
-        setHistoryIndex(-1)
-        onInputChange(draft)
-      } else {
-        const idx = historyIndex + 1
-        setHistoryIndex(idx)
-        onInputChange(history[idx])
-      }
-    }
+    if (e.key === 'Enter' && !e.shiftKey) return handleEnterKey(e)
+    if (e.key === 'ArrowUp') return handleArrowUp(e)
+    if (e.key === 'ArrowDown') return handleArrowDown(e)
   }
 
   return (

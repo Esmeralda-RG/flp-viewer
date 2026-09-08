@@ -9,6 +9,51 @@ import { registerGlossaryHoverProvider } from '@/app/lib/glossary-hover'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
+type Monaco = Parameters<OnMount>[1]
+type ContentChanges = MonacoEditorNS.IModelContentChangedEvent['changes']
+
+function computeRestoreOps(
+  changes: ContentChanges,
+  lineMap: Map<number, string>,
+  model: MonacoEditorNS.ITextModel,
+  monaco: Monaco,
+): MonacoEditorNS.IIdentifiedSingleEditOperation[] {
+  const ops: MonacoEditorNS.IIdentifiedSingleEditOperation[] = []
+  for (const change of changes) {
+    const { startLineNumber, endLineNumber } = change.range
+    for (const [lockedLine, lockedContent] of lineMap) {
+      if (startLineNumber > lockedLine || endLineNumber < lockedLine) continue
+      const currentLen = lockedLine <= model.getLineCount()
+        ? model.getLineContent(lockedLine).length
+        : 0
+      ops.push({
+        range: new monaco.Range(lockedLine, 1, lockedLine, Math.max(1, currentLen + 1)),
+        text: lockedContent,
+      })
+    }
+  }
+  return ops
+}
+
+// Cuando una edición inserta/borra líneas por encima de una línea bloqueada,
+// su número de línea cambia — hay que re-mapear lineMap al nuevo desplazamiento.
+function shiftLockedLines(lineMap: Map<number, string>, changes: ContentChanges): void {
+  const reverseChanges = [...changes].sort((a, b) => b.range.startLineNumber - a.range.startLineNumber)
+
+  for (const change of reverseChanges) {
+    const pivot = change.range.startLineNumber
+    const removed = change.range.endLineNumber - change.range.startLineNumber
+    const added = (change.text.match(/\n/g) || []).length
+    const delta = added - removed
+    if (delta === 0) continue
+
+    const next = new Map<number, string>()
+    for (const [n, content] of lineMap) next.set(n > pivot ? n + delta : n, content)
+    lineMap.clear()
+    for (const [k, v] of next) lineMap.set(k, v)
+  }
+}
+
 export default function CodeEditor({
   value,
   onChange,
@@ -71,27 +116,7 @@ export default function CodeEditor({
       const changes = [...event.changes].sort(
         (a, b) => a.range.startLineNumber - b.range.startLineNumber,
       )
-
-      const restoreOps: MonacoEditorNS.IIdentifiedSingleEditOperation[] = []
-
-      for (const change of changes) {
-        const { startLineNumber, endLineNumber } = change.range
-        for (const [lockedLine, lockedContent] of lineMap) {
-          if (startLineNumber <= lockedLine && endLineNumber >= lockedLine) {
-            const currentLen =
-              lockedLine <= model.getLineCount()
-                ? model.getLineContent(lockedLine).length
-                : 0
-            restoreOps.push({
-              range: new monaco.Range(
-                lockedLine, 1,
-                lockedLine, Math.max(1, currentLen + 1),
-              ),
-              text: lockedContent,
-            })
-          }
-        }
-      }
+      const restoreOps = computeRestoreOps(changes, lineMap, model, monaco)
 
       if (restoreOps.length) {
         reverting = true
@@ -99,26 +124,8 @@ export default function CodeEditor({
         reverting = false
         return
       }
-      const reverseChanges = [...event.changes].sort(
-        (a, b) => b.range.startLineNumber - a.range.startLineNumber,
-      )
 
-      for (const change of reverseChanges) {
-        const pivot = change.range.startLineNumber
-        const removed = change.range.endLineNumber - change.range.startLineNumber
-        const added = (change.text.match(/\n/g) || []).length
-        const delta = added - removed
-
-        if (delta !== 0) {
-          const next = new Map<number, string>()
-          for (const [n, content] of lineMap) {
-            next.set(n > pivot ? n + delta : n, content)
-          }
-          lineMap.clear()
-          for (const [k, v] of next) lineMap.set(k, v)
-        }
-      }
-
+      shiftLockedLines(lineMap, event.changes)
       applyDecorations()
     })
 

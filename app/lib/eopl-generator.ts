@@ -1,4 +1,5 @@
 import type { GrammarAST, GrammarRule, Production, BNFItem } from '@/app/types/bnf'
+import { sym, autoVariantName } from './grammar-naming'
 
 // Non-terminals that map directly to SLLGEN lexer primitives
 const PRIMITIVES = new Set(['number', 'identifier', 'string', 'boolean', 'letter', 'digit'])
@@ -73,10 +74,6 @@ export function getLexErrors(lexInput: string): string[] {
     .map((l) => `Token sin implementar: "${l}" — escribe la regla sllgen: (${l} (...) tipo)`)
 }
 
-function sym(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '')
-}
-
 function isPrimitive(name: string): boolean {
   return PRIMITIVES.has(name.toLowerCase())
 }
@@ -92,6 +89,43 @@ function escapeSllgenTerminal(raw: string): string {
 
 function terminalToSllgen(value: string): string {
   return `"${escapeSllgenTerminal(value)}"`
+}
+
+type GroupItem = Extract<BNFItem, { kind: 'group' }>
+
+// Detect: [<A> ("sep" <A>)*]  →  (separated-list A sep)
+// This is the correct EBNF notation for separated lists
+function separatedListFromOptionalGroup(item: GroupItem): string | null {
+  if (item.op !== '?' || item.items.length !== 2) return null
+  const [elem, inner] = item.items
+  if (elem.kind === 'terminal' || inner.kind !== 'group') return null
+  if (inner.op !== '*' || inner.items.length !== 2) return null
+
+  const [sep, rep] = inner.items
+  if (sep.kind !== 'terminal' || rep.kind === 'terminal') return null
+
+  return `(separated-list ${itemToSllgen(elem)} ${terminalToSllgen(sep.value)})`
+}
+
+// Legacy shorthand: (A sep)* — kept for backward compatibility
+function separatedListShorthand(item: GroupItem): string | null {
+  if (item.op !== '*' || item.items.length !== 2) return null
+  const [elem, sep] = item.items
+  if (elem.kind === 'terminal' || sep.kind !== 'terminal') return null
+
+  return `(separated-list ${itemToSllgen(elem)} ${terminalToSllgen(sep.value)})`
+}
+
+function flattenGroup(item: GroupItem): string {
+  const inner = item.items.map(itemToSllgen).join(' ')
+  if (!item.op) return inner          // bare group — just flatten
+  if (item.op === '*') return `(arbno ${inner})`
+  if (item.op === '+') return `${inner} (arbno ${inner})`
+  return `(arbno ${inner}) ; opcional`
+}
+
+function groupToSllgen(item: GroupItem): string {
+  return separatedListFromOptionalGroup(item) ?? separatedListShorthand(item) ?? flattenGroup(item)
 }
 
 function itemToSllgen(item: BNFItem): string {
@@ -110,65 +144,9 @@ function itemToSllgen(item: BNFItem): string {
       return `(arbno ${s}) ; opcional — considera dividir en dos variantes`
     }
 
-    case 'group': {
-      // Detect: [<A> ("sep" <A>)*]  →  (separated-list A sep)
-      // This is the correct EBNF notation for separated lists
-      if (
-        item.op === '?' &&
-        item.items.length === 2 &&
-        item.items[0].kind !== 'terminal' &&
-        item.items[1].kind === 'group'
-      ) {
-        const inner = item.items[1]
-        if (
-          inner.op === '*' &&
-          inner.items.length === 2 &&
-          inner.items[0].kind === 'terminal' &&
-          inner.items[1].kind !== 'terminal'
-        ) {
-          const elem = itemToSllgen(item.items[0])
-          const sep = terminalToSllgen((inner.items[0]).value)
-          return `(separated-list ${elem} ${sep})`
-        }
-      }
-
-      // Legacy shorthand: (A sep)* — kept for backward compatibility
-      if (
-        item.op === '*' &&
-        item.items.length === 2 &&
-        item.items[0].kind !== 'terminal' &&
-        item.items[1].kind === 'terminal'
-      ) {
-        const elem = itemToSllgen(item.items[0])
-        const sep = terminalToSllgen((item.items[1]).value)
-        return `(separated-list ${elem} ${sep})`
-      }
-
-      const inner = item.items.map(itemToSllgen).join(' ')
-      if (!item.op) return inner          // bare group — just flatten
-      if (item.op === '*') return `(arbno ${inner})`
-      if (item.op === '+') return `${inner} (arbno ${inner})`
-      return `(arbno ${inner}) ; opcional`
-    }
+    case 'group':
+      return groupToSllgen(item)
   }
-}
-
-function autoVariantName(lhsSym: string, index: number, prod: Production): string {
-  if (prod.variantName) return prod.variantName
-
-  // EOPL convention: first production of program rule → a-program
-  if (lhsSym === 'program' && index === 0) return 'a-program'
-
-  // Try to build a name from the first terminal keyword
-  const keyword = prod.items
-    .filter((i): i is Extract<BNFItem, { kind: 'terminal' }> => i.kind === 'terminal')
-    .map((i) => i.value.replace(/[^a-z0-9]/gi, ''))
-    .find(Boolean)
-
-  if (keyword) return `${lhsSym}-${keyword}-exp`
-
-  // Fall back to numbered variant
-  return index === 0 ? `${lhsSym}-exp` : `${lhsSym}-${index + 1}-exp`
 }
 
 function productionLine(lhsSym: string, prod: Production, index: number): string {
@@ -197,7 +175,7 @@ export function generateGrammarRkt(ast: GrammarAST, lexInput: string): string {
     return rule.productions.map((prod, i) => productionLine(s, prod, i))
   })
 
-  return String.raw`#lang eopl
+  return `#lang eopl
 ;;; ============================================================
 ;;; grammar.rkt — Utilidades generadas por FLP Viewer
 ;;; Universidad del Valle — Intérprete Educativo

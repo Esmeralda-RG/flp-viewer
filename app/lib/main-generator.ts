@@ -1,23 +1,6 @@
-import type { GrammarAST, GrammarRule, Production, BNFItem } from '@/app/types/bnf'
+import type { GrammarAST, GrammarRule, BNFItem } from '@/app/types/bnf'
 import type { RuleKind, MainGeneratorResult } from '@/app/types/grammar'
-
-// ─── auxiliares ───────────────────────────────────────────────────────────────
-
-function sym(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-_]/g, '')
-}
-
-function autoVariantName(lhsSym: string, index: number, prod: Production): string {
-  if (prod.variantName) return prod.variantName
-  // Convención EOPL: primera producción de program → a-program
-  if (lhsSym === 'program' && index === 0) return 'a-program'
-  const keyword = prod.items
-    .filter((i): i is Extract<BNFItem, { kind: 'terminal' }> => i.kind === 'terminal')
-    .map((i) => i.value.replace(/[^a-z0-9]/gi, ''))
-    .find(Boolean)
-  if (keyword) return `${lhsSym}-${keyword}-exp`
-  return index === 0 ? `${lhsSym}-exp` : `${lhsSym}-${index + 1}-exp`
-}
+import { sym, autoVariantName } from './grammar-naming'
 
 // ─── inferencia de nombres de campo ───────────────────────────────────────────
 

@@ -139,50 +139,24 @@ describe('HelpDrawer', () => {
       await userEvent.click(screen.getByRole('button', { name: /Referencia/ }))
     }
 
-    it('renders h2 headings', async () => {
+    it.each([
+      ['h2 headings', 'Subtítulo h2'],
+      ['h3 headings', 'Subtítulo h3'],
+      ['ordered list items', 'ordenado uno'],
+      ['inline code', 'código inline'],
+      ['code block', '(define x 1)'],
+      ['blockquote', 'Una cita importante'],
+      ['strong (bold)', 'negrita'],
+      ['em (italic)', 'cursiva'],
+    ])('renders %s', async (_label, text) => {
       await renderRich()
-      expect(screen.getByText('Subtítulo h2')).toBeInTheDocument()
-    })
-
-    it('renders h3 headings', async () => {
-      await renderRich()
-      expect(screen.getByText('Subtítulo h3')).toBeInTheDocument()
+      expect(screen.getByText(text)).toBeInTheDocument()
     })
 
     it('renders unordered list items', async () => {
       await renderRich()
       expect(screen.getByText('item uno')).toBeInTheDocument()
       expect(screen.getByText('item dos')).toBeInTheDocument()
-    })
-
-    it('renders ordered list items', async () => {
-      await renderRich()
-      expect(screen.getByText('ordenado uno')).toBeInTheDocument()
-    })
-
-    it('renders inline code', async () => {
-      await renderRich()
-      expect(screen.getByText('código inline')).toBeInTheDocument()
-    })
-
-    it('renders code block', async () => {
-      await renderRich()
-      expect(screen.getByText('(define x 1)')).toBeInTheDocument()
-    })
-
-    it('renders blockquote', async () => {
-      await renderRich()
-      expect(screen.getByText('Una cita importante')).toBeInTheDocument()
-    })
-
-    it('renders strong (bold)', async () => {
-      await renderRich()
-      expect(screen.getByText('negrita')).toBeInTheDocument()
-    })
-
-    it('renders em (italic)', async () => {
-      await renderRich()
-      expect(screen.getByText('cursiva')).toBeInTheDocument()
     })
 
     it('renders table with headers and cells', async () => {

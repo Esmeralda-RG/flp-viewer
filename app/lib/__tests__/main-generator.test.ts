@@ -22,24 +22,17 @@ describe('generateMainRkt', () => {
     expect(content).toContain('(require "utils.rkt")')
   })
 
-  it('defines scan&parse', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('(define scan&parse')
-  })
-
-  it('defines interpreter', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('(define interpreter')
-  })
-
-  it('generates eval-program for program rule', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('(define eval-program')
-  })
-
-  it('generates eval-expression for expression rule', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('(define eval-expression')
+  it.each([
+    ['defines scan&parse', grammar, '(define scan&parse'],
+    ['defines interpreter', grammar, '(define interpreter'],
+    ['generates eval-program for program rule', grammar, '(define eval-program'],
+    ['generates eval-expression for expression rule', grammar, '(define eval-expression'],
+    ['generates TODO placeholders for non-program variants', grammar, 'TODO'],
+    ['auto-generates eval-expression with env parameter', grammar, '(lambda (exp env)'],
+    ['uses explicit variant name from =>', '<expression> ::= "zero" => zero-exp', 'zero-exp'],
+  ])('%s', (_name, input, expected) => {
+    const { content } = gen(input)
+    expect(content).toContain(expected)
   })
 
   it('returns locked line numbers', () => {
@@ -54,21 +47,6 @@ describe('generateMainRkt', () => {
       expect(ln).toBeGreaterThanOrEqual(1)
       expect(ln).toBeLessThanOrEqual(totalLines)
     }
-  })
-
-  it('generates TODO placeholders for non-program variants', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('TODO')
-  })
-
-  it('auto-generates eval-expression with env parameter', () => {
-    const { content } = gen(grammar)
-    expect(content).toContain('(lambda (exp env)')
-  })
-
-  it('uses explicit variant name from =>', () => {
-    const { content } = gen('<expression> ::= "zero" => zero-exp')
-    expect(content).toContain('zero-exp')
   })
 
   it('a-program body calls eval-expression with init-env', () => {

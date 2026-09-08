@@ -40,7 +40,7 @@ export default function FrameCard({ frame, x, y }: Readonly<FrameCardProps>) {
         })
 
         return (
-          <g key={si}>
+          <g key={`${si}-${scope.map((b) => b.name).join('-')}`}>
             {si > 0 && (
               <line
                 x1={14} y1={sepY + 5}

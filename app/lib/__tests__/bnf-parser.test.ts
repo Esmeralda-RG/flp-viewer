@@ -40,22 +40,14 @@ describe('parse', () => {
     expect(prod.variantName).toBe('let-exp')
   })
 
-  it('parses * quantifier on non-terminal', () => {
-    const ast = parseStr('<expr> ::= <arg>*')
+  it.each([
+    ['*' as const],
+    ['+' as const],
+    ['?' as const],
+  ])('parses %s quantifier on non-terminal', (op) => {
+    const ast = parseStr(`<expr> ::= <arg>${op}`)
     const item = ast.rules[0].productions[0].items[0]
-    expect(item).toEqual({ kind: 'nonterminal-rep', name: 'arg', op: '*' })
-  })
-
-  it('parses + quantifier on non-terminal', () => {
-    const ast = parseStr('<expr> ::= <arg>+')
-    const item = ast.rules[0].productions[0].items[0]
-    expect(item).toEqual({ kind: 'nonterminal-rep', name: 'arg', op: '+' })
-  })
-
-  it('parses ? quantifier on non-terminal', () => {
-    const ast = parseStr('<expr> ::= <arg>?')
-    const item = ast.rules[0].productions[0].items[0]
-    expect(item).toEqual({ kind: 'nonterminal-rep', name: 'arg', op: '?' })
+    expect(item).toEqual({ kind: 'nonterminal-rep', name: 'arg', op })
   })
 
   it('parses (...)* group', () => {

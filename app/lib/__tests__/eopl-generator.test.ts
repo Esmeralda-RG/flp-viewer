@@ -72,75 +72,22 @@ describe('generateGrammarRkt', () => {
     expect(out).toContain('float')
   })
 
-  it('generates a-program for first program production', () => {
-    const ast = parseStr('<program> ::= <expression>')
+  it.each([
+    ['generates a-program for first program production', '<program> ::= <expression>', 'a-program'],
+    ['uses explicit variant name from =>', '<expression> ::= "let" <identifier> => let-exp', 'let-exp'],
+    ['generates (arbno ...) for * quantifier on nonterminal', '<expr> ::= <arg>*', '(arbno arg)'],
+    ['generates "X (arbno X)" for + quantifier on nonterminal', '<expr> ::= <arg>+', 'arg (arbno arg)'],
+    ['generates "(arbno X) ; opcional" for ? quantifier on nonterminal', '<expr> ::= <arg>?', '(arbno arg) ; opcional'],
+    ['generates (separated-list ...) for [<A> ("sep" <A>)*] pattern', '<expr> ::= [<item> ("," <item>)*]', '(separated-list item ",")'],
+    ['generates (separated-list ...) for legacy (A sep)* shorthand', '<expr> ::= (<item> ",")*', '(separated-list item ",")'],
+    ['flattens a bare group without quantifier', '<expr> ::= ("let" <identifier>)', '"let" identifier'],
+    ['generates (arbno ...) for multi-item group with *', '<expr> ::= ("a" <b>)*', '(arbno "a" b)'],
+    ['generates "X (arbno X)" for multi-item group with +', '<expr> ::= (<a> <b>)+', '(arbno a b)'],
+    ['generates "(arbno ...) ; opcional" for multi-item group with ?', '<expr> ::= (<a> <b>)?', '(arbno a b) ; opcional'],
+    ['escapes double quotes in terminal values', '<expr> ::= "let"', '"let"'],
+  ])('%s', (_name, input, expected) => {
+    const ast = parseStr(input)
     const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('a-program')
-  })
-
-  it('uses explicit variant name from =>', () => {
-    const ast = parseStr('<expression> ::= "let" <identifier> => let-exp')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('let-exp')
-  })
-
-  it('generates (arbno ...) for * quantifier on nonterminal', () => {
-    const ast = parseStr('<expr> ::= <arg>*')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(arbno arg)')
-  })
-
-  it('generates "X (arbno X)" for + quantifier on nonterminal', () => {
-    const ast = parseStr('<expr> ::= <arg>+')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('arg (arbno arg)')
-  })
-
-  it('generates "(arbno X) ; opcional" for ? quantifier on nonterminal', () => {
-    const ast = parseStr('<expr> ::= <arg>?')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(arbno arg) ; opcional')
-  })
-
-  it('generates (separated-list ...) for [<A> ("sep" <A>)*] pattern', () => {
-    const ast = parseStr('<expr> ::= [<item> ("," <item>)*]')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(separated-list item ",")')
-  })
-
-  it('generates (separated-list ...) for legacy (A sep)* shorthand', () => {
-    const ast = parseStr('<expr> ::= (<item> ",")*')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(separated-list item ",")')
-  })
-
-  it('flattens a bare group without quantifier', () => {
-    const ast = parseStr('<expr> ::= ("let" <identifier>)')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('"let" identifier')
-  })
-
-  it('generates (arbno ...) for multi-item group with *', () => {
-    const ast = parseStr('<expr> ::= ("a" <b>)*')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(arbno "a" b)')
-  })
-
-  it('generates "X (arbno X)" for multi-item group with +', () => {
-    const ast = parseStr('<expr> ::= (<a> <b>)+')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(arbno a b)')
-  })
-
-  it('generates "(arbno ...) ; opcional" for multi-item group with ?', () => {
-    const ast = parseStr('<expr> ::= (<a> <b>)?')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('(arbno a b) ; opcional')
-  })
-
-  it('escapes double quotes in terminal values', () => {
-    const ast = parseStr('<expr> ::= "let"')
-    const out = generateGrammarRkt(ast, '')
-    expect(out).toContain('"let"')
+    expect(out).toContain(expected)
   })
 })

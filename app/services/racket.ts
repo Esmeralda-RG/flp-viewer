@@ -4,31 +4,29 @@ import type { EditorFileLike, StepResult, TraceResult, RawSnapshot } from '@/app
 
 // ── Conversión del AST ────────────────────────────────────────────────────────
 
+function arrayToASTNode(arr: unknown[]): ASTNode {
+  const children = arr.map(toASTNode).filter((n): n is ASTNode => n !== null)
+  return children.length === 0 ? { type: 'list' } : { type: 'list', children }
+}
+
+function objectToASTNode(obj: Record<string, unknown>): ASTNode {
+  if (typeof obj.type !== 'string') return { type: JSON.stringify(obj) }
+  const fields = Array.isArray(obj.fields) ? obj.fields : []
+  const children = fields.map(toASTNode).filter((n): n is ASTNode => n !== null)
+  return { type: obj.type, children: children.length > 0 ? children : undefined }
+}
+
 function toASTNode(v: unknown): ASTNode | null {
   if (v === null || v === undefined) return null
   if (typeof v === 'boolean') return { type: 'boolean', value: v }
   if (typeof v === 'number') return { type: 'number', value: v }
   if (typeof v === 'string') return { type: 'string', value: v }
-  if (Array.isArray(v)) {
-    const children = v.map(toASTNode).filter((n): n is ASTNode => n !== null)
-    if (children.length === 0) return { type: 'list' }
-    return { type: 'list', children }
+  if (Array.isArray(v)) return arrayToASTNode(v)
+  if (typeof v === 'object') return objectToASTNode(v as Record<string, unknown>)
+  if (typeof v === 'symbol' || typeof v === 'bigint' || typeof v === 'function') {
+    return { type: v.toString() }
   }
-  if (typeof v === 'object') {
-    const obj = v as Record<string, unknown>
-    if (typeof obj.type === 'string') {
-      const fields = Array.isArray(obj.fields) ? obj.fields : []
-      const children = fields
-        .map(toASTNode)
-        .filter((n): n is ASTNode => n !== null)
-      return {
-        type: obj.type,
-        children: children.length > 0 ? children : undefined,
-      }
-    }
-    return { type: JSON.stringify(v) }
-  }
-  return { type: String(v) }
+  return { type: 'unknown' }
 }
 
 // ── Conversión de ambientes ───────────────────────────────────────────────────
@@ -47,7 +45,10 @@ export function valueToString(v: unknown): string {
     if (typeof obj.type === 'string') return `<${obj.type}>`
     return JSON.stringify(v)
   }
-  return String(v)
+  if (typeof v === 'symbol' || typeof v === 'bigint' || typeof v === 'function') {
+    return v.toString()
+  }
+  return 'unknown'
 }
 
 function valueType(v: unknown): string {
@@ -64,6 +65,12 @@ function valueType(v: unknown): string {
   return 'unknown'
 }
 
+function frameLabel(tag: unknown): string {
+  if (tag === 'empty-env') return 'empty-env'
+  if (tag === 'init-env') return 'init-env'
+  return 'extend'
+}
+
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
   return raw.map((snap) => {
     const s = snap as RawSnapshot
@@ -72,10 +79,7 @@ function toEnvFrames(raw: unknown[]): EnvFrame[] {
         name, value: valueToString(val), type: valueType(val),
       }))
     )
-    const label = s.tag === 'empty-env' ? 'empty-env'
-                : s.tag === 'init-env'  ? 'init-env'
-                : 'extend'
-    return { label, frames }
+    return { label: frameLabel(s.tag), frames }
   })
 }
 

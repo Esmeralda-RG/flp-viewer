@@ -43,53 +43,53 @@ export function parse(tokens: Token[]): GrammarAST {
     return false
   }
 
+  // NONTERMINAL e IDENT se tratan igual: ambos son referencias a no-terminales
+  function parseNameItem(kind: 'NONTERMINAL' | 'IDENT'): BNFItem {
+    const name = consume(kind).value
+    const op = parseOp()
+    if (op) return { kind: 'nonterminal-rep', name, op }
+    return { kind: 'nonterminal', name }
+  }
+
+  function parseTerminalItem(): BNFItem {
+    const value = consume('TERMINAL').value
+    const op = parseOp()
+    if (op) return { kind: 'group', items: [{ kind: 'terminal', value }], op }
+    return { kind: 'terminal', value }
+  }
+
+  function parseGroupItems(closeKind: TokenKind): BNFItem[] {
+    const items: BNFItem[] = []
+    while (!check(closeKind) && !check('EOF')) {
+      items.push(parseItem())
+    }
+    return items
+  }
+
+  function parseParenGroup(): BNFItem {
+    consume('LPAREN')
+    const items = parseGroupItems('RPAREN')
+    if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar el grupo', peek())
+    consume('RPAREN')
+    const op = parseOp()
+    return { kind: 'group', items, op }
+  }
+
+  // [...] es azúcar para (...)?
+  function parseBracketGroup(): BNFItem {
+    consume('LBRACKET')
+    const items = parseGroupItems('RBRACKET')
+    if (!check('RBRACKET')) throw new ParseError('Se esperaba "]" para cerrar el grupo opcional', peek())
+    consume('RBRACKET')
+    return { kind: 'group', items, op: '?' }
+  }
+
   function parseItem(): BNFItem {
-    if (check('NONTERMINAL')) {
-      const name = consume('NONTERMINAL').value
-      const op = parseOp()
-      if (op) return { kind: 'nonterminal-rep', name, op }
-      return { kind: 'nonterminal', name }
-    }
-
-    if (check('IDENT')) {
-      // Los identificadores simples se tratan como referencias a no-terminales
-      const name = consume('IDENT').value
-      const op = parseOp()
-      if (op) return { kind: 'nonterminal-rep', name, op }
-      return { kind: 'nonterminal', name }
-    }
-
-    if (check('TERMINAL')) {
-      const value = consume('TERMINAL').value
-      const op = parseOp()
-      if (op) return { kind: 'group', items: [{ kind: 'terminal', value }], op }
-      return { kind: 'terminal', value }
-    }
-
-    if (check('LPAREN')) {
-      consume('LPAREN')
-      const items: BNFItem[] = []
-      while (!check('RPAREN') && !check('EOF')) {
-        items.push(parseItem())
-      }
-      if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar el grupo', peek())
-      consume('RPAREN')
-      const op = parseOp()
-      return { kind: 'group', items, op }
-    }
-
-    // [...] es azúcar para (...)?
-    if (check('LBRACKET')) {
-      consume('LBRACKET')
-      const items: BNFItem[] = []
-      while (!check('RBRACKET') && !check('EOF')) {
-        items.push(parseItem())
-      }
-      if (!check('RBRACKET')) throw new ParseError('Se esperaba "]" para cerrar el grupo opcional', peek())
-      consume('RBRACKET')
-      return { kind: 'group', items, op: '?' }
-    }
-
+    if (check('NONTERMINAL')) return parseNameItem('NONTERMINAL')
+    if (check('IDENT')) return parseNameItem('IDENT')
+    if (check('TERMINAL')) return parseTerminalItem()
+    if (check('LPAREN')) return parseParenGroup()
+    if (check('LBRACKET')) return parseBracketGroup()
     throw new ParseError('Se esperaba un elemento de producción', peek())
   }
 

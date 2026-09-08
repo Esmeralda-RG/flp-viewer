@@ -121,7 +121,12 @@ export default function HelpDrawer({
             )}
           </nav>
 
-          <div className="flex-1 overflow-y-auto px-6 py-5 min-w-0" tabIndex={0}>
+          <div
+            className="flex-1 overflow-y-auto px-6 py-5 min-w-0"
+            role="tabpanel"
+            aria-label={active?.title}
+            tabIndex={0}
+          >
             {active ? (
               <>
                 {relatedExample && (
