@@ -1,21 +1,9 @@
 # FLP Viewer
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Esmeralda-RG_flp-viewer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Esmeralda-RG_flp-viewer)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Esmeralda-RG_flp-viewer&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Esmeralda-RG_flp-viewer)
+
 Prototipo web educativo desarrollado como trabajo de grado en Ingeniería de Sistemas, Universidad del Valle sede Tuluá. Su propósito es apoyar la comprensión de los conceptos fundamentales de la asignatura **Fundamentos de Interpretación y Compilación de Lenguajes de Programación (FLP)** mediante la visualización interactiva de estructuras internas —árboles de sintaxis abstracta y ambientes de ejecución— generadas a partir de intérpretes implementados por los estudiantes en Racket/EOPL.
-
----
-
-## Funcionalidades
-
-| ID | Nombre | Descripción |
-|---|---|---|
-| RF-01 | Generación del AST | Procesa el programa del usuario con la gramática definida y produce el AST correspondiente. |
-| RF-02 | Visualización del AST | Renderiza el AST de forma jerárquica e interactiva en un panel dedicado. |
-| RF-03 | Ejecución y evaluación | Invoca el intérprete Racket sobre los archivos del editor y muestra el resultado en la consola. |
-| RF-04 | Representación del ambiente | Muestra el ambiente de evaluación como estructura jerárquica de frames, actualizada tras cada ejecución. |
-| RF-05 | Biblioteca de ejemplos | Ofrece programas predefinidos alineados con los indicadores de logro de la asignatura. |
-| RF-06 | Validación de sintaxis | Detecta y reporta errores léxicos y sintácticos en la gramática BNF y en el programa del usuario. |
-| RF-07 | Editor con secciones protegidas | Presenta los archivos del intérprete en un editor organizado por pestañas con secciones de scaffolding bloqueadas. |
-| RF-08 | Plantilla base y exportación | Provee una plantilla editable del intérprete y permite descargar el proyecto limpio en formato `.zip`. |
 
 ---
 
@@ -66,26 +54,23 @@ Para un token no listado arriba, se puede escribir directamente la regla en nota
 
 El intérprete no corre en el servidor Next.js — se delega a un proceso Racket externo por cada ejecución:
 
-```
-Navegador
-   │  POST /api/run  { files[], testInput }
-   ▼
-API Route (Next.js)
-   │  1. Escribe los archivos del proyecto en un directorio temporal
-   │  2. Inyecta _runner.rkt (generado en tiempo de ejecución)
-   │  3. Lanza:  racket _runner.rkt "<expresión>"
-   ▼
-Proceso Racket
-   │  • _runner.rkt requiere grammar.rkt, environment.rkt, utils.rkt, main.rkt
-   │  • Parsea la expresión con el stream-parser del estudiante
-   │  • Llama eval-program dentro de un with-handlers (captura errores)
-   │  • Serializa AST + resultado + frames de ambiente a JSON
-   ▼
-API Route
-   │  Lee stdout, limpia stderr, devuelve { steps[], stderr }
-   ▼
-Navegador
-   Actualiza el visualizador de AST, el panel de ambiente y la consola
+```mermaid
+sequenceDiagram
+    participant B as Navegador
+    participant A as API Route (Next.js)
+    participant R as Proceso Racket
+
+    B->>A: POST /api/run { files[], testInput }
+    A->>A: Escribe archivos en directorio temporal
+    A->>A: Inyecta _runner.rkt
+    A->>R: racket _runner.rkt "<expresión>"
+    R->>R: Requiere grammar.rkt, environment.rkt, utils.rkt, main.rkt
+    R->>R: Parsea con el stream-parser del estudiante
+    R->>R: eval-program dentro de with-handlers
+    R->>R: Serializa AST + resultado + frames a JSON
+    R-->>A: stdout / stderr
+    A-->>B: { steps[], stderr }
+    B->>B: Actualiza AST, ambiente y consola
 ```
 
 ### Instrumentación del ambiente
@@ -99,15 +84,15 @@ Navegador
 ### Requisitos
 
 - Node.js >= 20 y pnpm
-- [Racket](https://racket-lang.org/) instalado y accesible en el PATH (por defecto se busca en `/Applications/Racket v9.1/bin/racket`)
+- [Racket](https://racket-lang.org/) instalado y accesible en el PATH 
 
 ### Pasos
 
 ```bash
 pnpm install
 
-# Indicar la ruta al binario de Racket si es diferente a la predeterminada
-export RACKET_BIN="/usr/local/bin/racket"
+cp .env.example .env
+# Editar .env y ajustar RACKET_BIN a la ruta del binario de Racket
 
 pnpm dev
 ```
