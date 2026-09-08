@@ -67,3 +67,24 @@ El Lenguaje LET no incluye suma a propósito: con `diff-exp` (resta) y `zero?` a
 ## Restricción LL(1)
 
 SLLGEN usa análisis LL(1): dos alternativas de la **misma regla** no pueden empezar con el mismo token. En el Lenguaje LET cada alternativa arranca con algo distinto (`-`, `zero?`, `if`, `let`, un número o un identificador), por eso no hay conflicto.
+
+El generador de BNF de esta app **no detecta este problema al escribir la gramática** — solo aparece como un error de Racket al presionar Ejecutar, con un mensaje técnico como:
+
+```
+parser-generation: grammar not LL(1): shift conflict detected for class identifier in nonterminal factor
+```
+
+Esto pasa típicamente cuando dos alternativas de una regla empiezan ambas con el mismo no-terminal, por ejemplo variables y llamadas a función:
+
+```
+<factor> ::= <identifier>                    => var-exp
+           | <identifier> "(" <expression> ")" => call-exp
+```
+
+Un identificador solo no le dice al parser cuál de las dos alternativas tomar sin mirar más adelante, y eso es justo lo que LL(1) no permite. La solución es **factorizar por la izquierda**: fusionar ambas alternativas en una sola que empiece igual, y usar un grupo opcional para la parte que las distingue:
+
+```
+<factor> ::= <identifier> ["(" <expression> ")"]  => call-exp
+```
+
+Aquí solo hay una alternativa que empieza con `<identifier>`, así que no hay conflicto — la presencia o no del grupo `[...]` se decide con el siguiente token (`"("` o no), que el parser sí puede mirar antes de comprometerse a una producción.
