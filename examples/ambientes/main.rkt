@@ -10,6 +10,12 @@
 (define scan&parse
   (sllgen:make-string-parser lexical-spec grammar))
 
+; Intérprete: front-end + evaluación + señal de lectura
+(define interpreter
+  (sllgen:make-rep-loop "--> "
+    (lambda (pgm) (eval-program pgm))
+    (sllgen:make-stream-parser lexical-spec grammar)))
+
 (define eval-program
   (lambda (pgm)
     (cases program pgm
@@ -35,3 +41,5 @@
           (extend-env (list id)
                       (list (eval-expression rhs env))
                       env))))))
+
+; (interpreter) ; descomentar para iniciar el REPL

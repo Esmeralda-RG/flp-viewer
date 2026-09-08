@@ -40,3 +40,5 @@
           (cons (symbol->string id1)
                 (map (lambda (id) (string-append " " (symbol->string id)))
                      ids)))))))
+
+; (interpreter) ; descomentar para iniciar el REPL
