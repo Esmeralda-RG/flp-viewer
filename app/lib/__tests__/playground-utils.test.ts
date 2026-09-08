@@ -12,6 +12,10 @@ describe('INITIAL_FILES', () => {
     expect(INITIAL_FILES.map(f => f.name)).toEqual(['main.rkt', 'utils.rkt'])
     expect(INITIAL_FILES[1].content.length).toBeGreaterThan(0)
   })
+
+  it('starts main.rkt with a #lang line so it runs standalone when downloaded', () => {
+    expect(INITIAL_FILES[0].content).toMatch(/^#lang eopl\n/)
+  })
 })
 
 describe('FILE_EXT_COLORS', () => {

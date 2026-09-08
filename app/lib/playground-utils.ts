@@ -2,7 +2,8 @@ import JSZip from 'jszip'
 import type { EditorFile } from '@/app/types/editor'
 import { generateUtilsRkt } from './utils-generator'
 
-export const INITIAL_CODE = `; intérprete simple — escribe tu código aquí
+export const INITIAL_CODE = `#lang eopl
+; intérprete simple — escribe tu código aquí
 `
 
 export const INITIAL_FILES: EditorFile[] = [
