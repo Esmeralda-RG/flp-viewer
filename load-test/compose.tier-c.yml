@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      RACKET_MAX_CONCURRENCY: "4"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4g
+    restart: "no"
