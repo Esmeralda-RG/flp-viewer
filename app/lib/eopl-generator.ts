@@ -1,4 +1,4 @@
-import type { GrammarAST, GrammarRule, Production, BNFItem } from '@/app/types/bnf'
+import type { GrammarAST, GrammarRule, Production, BNFItem, GroupItem } from '@/app/types/bnf'
 import { sym, autoVariantName } from './grammar-naming'
 
 // Non-terminals that map directly to SLLGEN lexer primitives
@@ -91,8 +91,6 @@ function terminalToSllgen(value: string): string {
   return `"${escapeSllgenTerminal(value)}"`
 }
 
-type GroupItem = Extract<BNFItem, { kind: 'group' }>
-
 // Detect: [<A> ("sep" <A>)*]  →  (separated-list A sep)
 // This is the correct EBNF notation for separated lists
 function separatedListFromOptionalGroup(item: GroupItem): string | null {
@@ -126,6 +124,13 @@ function flattenGroup(item: GroupItem): string {
 
 function groupToSllgen(item: GroupItem): string {
   return separatedListFromOptionalGroup(item) ?? separatedListShorthand(item) ?? flattenGroup(item)
+}
+
+// Un grupo repetido que SLLGEN compila a `(separated-list elem sep)` produce
+// un único campo (lista de `elem`) en el datatype real, a diferencia de un
+// `arbno` genérico multi-símbolo — ver collectFields en main-generator.ts
+export function isSeparatedListGroup(item: GroupItem): boolean {
+  return separatedListFromOptionalGroup(item) !== null || separatedListShorthand(item) !== null
 }
 
 function itemToSllgen(item: BNFItem): string {

@@ -59,4 +59,38 @@ describe('generateMainRkt', () => {
     const { content } = gen(grammar)
     expect(content).toContain('; (interpreter)')
   })
+
+  describe('arbno groups with multiple symbols', () => {
+    // SLLGEN expande `(arbno a b)` en dos campos paralelos (uno por símbolo
+    // no terminal), no en un único campo de tuplas — confirmado ejecutando
+    // eopl real. El stub debe reflejar esa aridad o `cases` falla en tiempo
+    // de carga con "wrong field count".
+    const arithGrammar = [
+      '<expr> ::= <term> (<op> <val>)* => arith-exp',
+      '<op> ::= "+" => plus-op',
+      '<val> ::= <number> => lit-exp',
+    ].join('\n')
+
+    it('emits one field per non-terminal in the group, not a single "items" field', () => {
+      const { content } = gen(arithGrammar)
+      expect(content).toContain('(arith-exp (term ops vals)')
+    })
+
+    it('does not use the old single-field shape for multi-symbol groups', () => {
+      const { content } = gen(arithGrammar)
+      expect(content).not.toContain('(arith-exp (term items)')
+    })
+
+    it('drops terminal-only symbols inside the group (no field for them)', () => {
+      const grammarWithKeyword = '<expr> ::= <base> ("key" <val>)* => mix-exp\n<base> ::= <number> => lit-exp\n<val> ::= <number> => lit-exp'
+      const { content } = gen(grammarWithKeyword)
+      expect(content).toContain('(mix-exp (base vals)')
+    })
+
+    it('still uses a single "items" field for the separated-list pattern', () => {
+      const grammarWithSepList = '<call> ::= <identifier> "(" [<expr> ("," <expr>)*] ")" => call-exp\n<expr> ::= <number> => lit-exp'
+      const { content } = gen(grammarWithSepList)
+      expect(content).toContain('(call-exp (id items)')
+    })
+  })
 })

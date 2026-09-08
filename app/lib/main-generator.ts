@@ -1,6 +1,7 @@
 import type { GrammarAST, GrammarRule, BNFItem } from '@/app/types/bnf'
 import type { RuleKind, MainGeneratorResult } from '@/app/types/grammar'
 import { sym, autoVariantName } from './grammar-naming'
+import { isSeparatedListGroup } from './eopl-generator'
 
 // ─── inferencia de nombres de campo ───────────────────────────────────────────
 
@@ -41,10 +42,24 @@ function collectFields(items: BNFItem[]): string[] {
         fields.push(nextName(fieldBase(item.name), true))
         break
       case 'group':
-        if (item.op) {
+        if (!item.op) {
+          fields.push(...collectFields(item.items))
+        } else if (isSeparatedListGroup(item)) {
+          // `(separated-list elem sep)`: SLLGEN genera un único campo,
+          // lista de `elem` — verificado con eopl real.
           fields.push(nextName('items'))
         } else {
-          fields.push(...collectFields(item.items))
+          // `arbno` genérico multi-símbolo: SLLGEN expande un campo por
+          // cada símbolo NO terminal dentro del grupo (listas paralelas),
+          // no un único campo de tuplas — verificado con eopl real.
+          for (const sub of item.items) {
+            if (sub.kind === 'terminal') continue
+            if (sub.kind === 'group') {
+              fields.push(nextName('items'))
+            } else {
+              fields.push(nextName(fieldBase(sub.name), true))
+            }
+          }
         }
         break
     }

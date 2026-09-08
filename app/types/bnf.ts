@@ -27,6 +27,8 @@ export type BNFItem =
   | { kind: 'nonterminal-rep'; name: string; op: '*' | '+' | '?' }
   | { kind: 'group'; items: BNFItem[]; op: '*' | '+' | '?' | null }
 
+export type GroupItem = Extract<BNFItem, { kind: 'group' }>
+
 export interface Production {
   items: BNFItem[]
   variantName: string | null
