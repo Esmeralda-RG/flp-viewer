@@ -9,7 +9,6 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      all: true,
       include: ['app/**/*.{ts,tsx}'],
       exclude: ['app/types/**', '**/__tests__/**'],
       thresholds: {

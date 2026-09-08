@@ -13,8 +13,8 @@ describe('loadExamples', () => {
       expect(typeof ex.id).toBe('string')
       expect(typeof ex.label).toBe('string')
       expect(typeof ex.code).toBe('string')
-      expect(ex.files.length).toBeGreaterThan(0)
-      const active = ex.files.find(f => f.id === ex.activeFileId)
+      expect(ex.files?.length).toBeGreaterThan(0)
+      const active = ex.files?.find(f => f.id === ex.activeFileId)
       expect(active?.content).toBe(ex.code)
     }
   })
