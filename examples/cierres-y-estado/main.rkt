@@ -1,0 +1,71 @@
+#lang eopl
+(provide (all-defined-out))
+
+(require "grammar.rkt")
+(require "environment.rkt")
+(require "utils.rkt")
+
+(sllgen:make-define-datatypes lexical-spec grammar)
+
+(define scan&parse
+  (sllgen:make-string-parser lexical-spec grammar))
+
+; Intérprete: front-end + evaluación + señal de lectura
+(define interpreter
+  (sllgen:make-rep-loop "--> "
+    (lambda (pgm) (eval-program pgm))
+    (sllgen:make-stream-parser lexical-spec grammar)))
+
+(define eval-program
+  (lambda (pgm)
+    (cases program pgm
+      (a-program (exp)
+        (eval-expression exp (init-env))))))
+
+(define eval-expression
+  (lambda (exp env)
+    (cases expression exp
+      (lit-exp (n) n)
+      (var-exp (id) (apply-env env id))
+      (diff-exp (e1 e2)
+        (- (eval-expression e1 env)
+           (eval-expression e2 env)))
+      (zero?-exp (e)
+        (if (zero? (eval-expression e env)) #t #f))
+      (if-exp (test t f)
+        (if (eval-expression test env)
+            (eval-expression t env)
+            (eval-expression f env)))
+      (let-exp (id rhs body)
+        (eval-expression body
+          (extend-env (list id)
+                      (list (eval-expression rhs env))
+                      env)))
+
+      ;; El procedimiento recuerda el ambiente de su creación (cierre). Como
+      ;; ese ambiente guarda las variables en celdas mutables, un 'set'
+      ;; posterior sobre una variable capturada es visible dentro del cierre.
+      (proc-exp (param body)
+        (lambda (arg)
+          (eval-expression body
+            (extend-env (list param) (list arg) env))))
+
+      (call-exp (rator rand)
+        (let ([proc (eval-expression rator env)]
+              [arg  (eval-expression rand env)])
+          (proc arg)))
+
+      ;; 'set' no crea una ligadura: sobrescribe la celda de una existente.
+      (set-exp (id rhs)
+        (let ([val (eval-expression rhs env)])
+          (setref! (apply-env-ref env id) val)
+          val))
+
+      ;; Evalúa la secuencia en orden y devuelve el valor de la última.
+      (begin-exp (first rest)
+        (let loop ([val (eval-expression first env)] [exps rest])
+          (if (null? exps)
+              val
+              (loop (eval-expression (car exps) env) (cdr exps))))))))
+
+; (interpreter) ; descomentar para iniciar el REPL

@@ -80,6 +80,7 @@ describe('generateGrammarRkt', () => {
     ['generates "(arbno X) ; opcional" for ? quantifier on nonterminal', '<expr> ::= <arg>?', '(arbno arg) ; opcional'],
     ['generates (separated-list ...) for [<A> ("sep" <A>)*] pattern', '<expr> ::= [<item> ("," <item>)*]', '(separated-list item ",")'],
     ['generates (separated-list ...) for legacy (A sep)* shorthand', '<expr> ::= (<item> ",")*', '(separated-list item ",")'],
+    ['translates literal SLLGEN (separated-list <A> ",") call notation from course material', '<expr> ::= (separated-list <item> ",")', '(separated-list item ",")'],
     ['flattens a bare group without quantifier', '<expr> ::= ("let" <identifier>)', '"let" identifier'],
     ['generates (arbno ...) for multi-item group with *', '<expr> ::= ("a" <b>)*', '(arbno "a" b)'],
     ['generates "X (arbno X)" for multi-item group with +', '<expr> ::= (<a> <b>)+', '(arbno a b)'],
@@ -89,5 +90,25 @@ describe('generateGrammarRkt', () => {
     const ast = parseStr(input)
     const out = generateGrammarRkt(ast, '')
     expect(out).toContain(expected)
+  })
+
+  it('defaults the comment token to "%" (course convention)', () => {
+    const ast = parseStr('<expr> ::= <number>')
+    const out = generateGrammarRkt(ast, '')
+    expect(out).toContain(String.raw`(comment ("%" (arbno (not #\newline))) skip)`)
+  })
+
+  it('allows "$" in the default identifier token', () => {
+    const ast = parseStr('<expr> ::= <identifier>')
+    const out = generateGrammarRkt(ast, '')
+    expect(out).toContain('(or letter digit "?" "$")')
+  })
+
+  it('lets a raw sllgen line override the comment token instead of duplicating it', () => {
+    const ast = parseStr('<expr> ::= <number>')
+    const out = generateGrammarRkt(ast, String.raw`(comment ("//" (arbno (not #\newline))) skip)`)
+    expect(out).toContain(String.raw`(comment ("//" (arbno (not #\newline))) skip)`)
+    expect(out).not.toContain('"%"')
+    expect(out.match(/\(comment /g)).toHaveLength(1)
   })
 })

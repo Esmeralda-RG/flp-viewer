@@ -4,11 +4,13 @@ import { sym, autoVariantName } from './grammar-naming'
 // Non-terminals that map directly to SLLGEN lexer primitives
 const PRIMITIVES = new Set(['number', 'identifier', 'string', 'boolean', 'letter', 'digit'])
 
-// Whitespace y comment siempre se auto-incluyen al inicio del lexical-spec
-const AUTO_RULES = [
-  '(whitespace (whitespace) skip)',
-  String.raw`(comment ("//" (arbno (not #\newline))) skip)`,
-]
+// Whitespace y comment se auto-incluyen al inicio del lexical-spec salvo que
+// el estudiante escriba su propia regla sllgen para ese token (p. ej. pegar
+// (comment ("%" (arbno (not #\newline))) skip) tal como lo usa el curso).
+const AUTO_RULES: Record<'whitespace' | 'comment', string> = {
+  whitespace: '(whitespace (whitespace) skip)',
+  comment: String.raw`(comment ("%" (arbno (not #\newline))) skip)`,
+}
 
 // Palabras clave que los estudiantes pueden usar en %lex
 const LEX_KEYWORDS: Record<string, string[]> = {
@@ -21,7 +23,7 @@ const LEX_KEYWORDS: Record<string, string[]> = {
     '(float ("-" digit (arbno digit) "." digit (arbno digit)) number)',
   ],
   identifier: [
-    '(identifier (letter (arbno (or letter digit "?"))) symbol)',
+    '(identifier (letter (arbno (or letter digit "?" "$"))) symbol)',
   ],
   binary: [
     '(binary ("b" (or "0" "1") (arbno (or "0" "1"))) string)',
@@ -160,6 +162,13 @@ function productionLine(lhsSym: string, prod: Production, index: number): string
   return `    (${lhsSym} (${items}) ${variantName})`
 }
 
+// Nombre del token que define una regla sllgen cruda, p. ej. "comment" en
+// (comment ("%" (arbno (not #\newline))) skip)
+function ruleTokenName(rule: string): string | null {
+  const match = /^\(\s*([\w?-]+)/.exec(rule)
+  return match ? match[1].toLowerCase() : null
+}
+
 function parseLexInput(lexInput: string): string[] {
   const keywords = lexInput
     .split('\n')
@@ -168,7 +177,11 @@ function parseLexInput(lexInput: string): string[] {
   const expanded = keywords.length > 0
     ? keywords.flatMap(expandLexRule)
     : DEFAULT_LEXICAL_RULES
-  return [...AUTO_RULES, ...expanded]
+  const overridden = new Set(expanded.map(ruleTokenName))
+  const autoRules = (Object.keys(AUTO_RULES) as (keyof typeof AUTO_RULES)[])
+    .filter((name) => !overridden.has(name))
+    .map((name) => AUTO_RULES[name])
+  return [...autoRules, ...expanded]
 }
 
 export function generateGrammarRkt(ast: GrammarAST, lexInput: string): string {

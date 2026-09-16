@@ -60,6 +60,20 @@ describe('parse', () => {
     }
   })
 
+  it('translates literal SLLGEN (separated-list <A> "sep") notation into the group shorthand', () => {
+    const ast = parseStr('<expr> ::= (separated-list <item> ",")')
+    const item = ast.rules[0].productions[0].items[0]
+    expect(item).toEqual({
+      kind: 'group',
+      op: '*',
+      items: [{ kind: 'nonterminal', name: 'item' }, { kind: 'terminal', value: ',' }],
+    })
+  })
+
+  it('throws ParseError when separated-list is missing its terminal separator', () => {
+    expect(() => parseStr('<expr> ::= (separated-list <item>)')).toThrowError(ParseError)
+  })
+
   it('parses [...] as optional group (?)', () => {
     const ast = parseStr('<expr> ::= ["opt"]')
     const item = ast.rules[0].productions[0].items[0]

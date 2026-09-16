@@ -1,0 +1,13 @@
+{
+  "id": "cierres-y-estado",
+  "label": "Procedimientos y estado",
+  "description": "Combina proc/call con set/begin: un procedimiento captura una variable por cierre y un set posterior sobre esa variable es visible dentro de él",
+  "activeFileId": "main",
+  "order": 6,
+  "files": [
+    { "id": "main",            "name": "main.rkt",        "language": "scheme" },
+    { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },
+    { "id": "environment-rkt", "name": "environment.rkt", "language": "scheme" },
+    { "id": "utils",           "name": "utils.rkt",       "language": "scheme" }
+  ]
+}

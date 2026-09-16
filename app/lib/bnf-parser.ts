@@ -66,8 +66,29 @@ export function parse(tokens: Token[]): GrammarAST {
     return items
   }
 
+  // Notación literal de SLLGEN: (separated-list <elem> "sep"), tal como
+  // aparece en el material del curso. Se traduce al mismo BNFItem que
+  // produce nuestro propio azúcar [<elem> ("sep" <elem>)*], para que
+  // eopl-generator la reconozca y emita (separated-list elem "sep").
+  function trySeparatedListCall(): BNFItem | null {
+    if (!(check('IDENT') && peek().value.toLowerCase() === 'separated-list')) return null
+    consume('IDENT')
+    const elem = parseItem()
+    if (!check('TERMINAL')) {
+      throw new ParseError('Se esperaba el separador de separated-list (un terminal entre comillas)', peek())
+    }
+    const sep = consume('TERMINAL').value
+    return { kind: 'group', items: [elem, { kind: 'terminal', value: sep }], op: '*' }
+  }
+
   function parseParenGroup(): BNFItem {
     consume('LPAREN')
+    const sepList = trySeparatedListCall()
+    if (sepList) {
+      if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar separated-list', peek())
+      consume('RPAREN')
+      return sepList
+    }
     const items = parseGroupItems('RPAREN')
     if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar el grupo', peek())
     consume('RPAREN')
