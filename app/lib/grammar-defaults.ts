@@ -19,10 +19,10 @@ export const EDITOR_OPTIONS = {
   padding: { top: 10 },
 }
 
-export const DEFAULT_LEX = `; Tokens disponibles: number  float  identifier  binary  octal  hex  text
+export const DEFAULT_LEX = String.raw`; Tokens disponibles: number  float  identifier  binary  octal  hex  text
 ; whitespace y comment se incluyen automáticamente (comentario: %). Para
 ; cambiarlos escribe tu propia regla sllgen, p. ej.:
-; (comment ("//" (arbno (not #\\newline))) skip)
+; (comment ("//" (arbno (not #\newline))) skip)
 ; Deja vacío para incluir todos los tokens del curso
 number
 identifier
