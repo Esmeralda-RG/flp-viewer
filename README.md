@@ -31,13 +31,13 @@ En el área léxica se escribe un nombre de token por línea. El generador recon
 |---|---|
 | `number` | Enteros positivos y negativos |
 | `float` | Números decimales positivos y negativos |
-| `identifier` | Identificadores alfanuméricos (letra seguida de letras, dígitos o `?`) |
+| `identifier` | Identificadores alfanuméricos (letra seguida de letras, dígitos, `?` o `$`) |
 | `binary` | Literales binarios con prefijo `b` |
 | `octal` | Literales octales con prefijo `0x` |
 | `hex` | Literales hexadecimales con prefijo `hx` |
 | `text` / `string` | Cadenas entre comillas dobles |
 
-`whitespace` y `comment` (comentarios de línea con `//`) se incluyen siempre de forma automática.
+`whitespace` y `comment` (comentarios de línea con `%`) se incluyen siempre de forma automática.
 
 Si el área léxica se deja vacía, se incluye el conjunto completo de tokens por defecto (`identifier`, `number`, `float`, `binary`, `octal`, `hex`).
 
