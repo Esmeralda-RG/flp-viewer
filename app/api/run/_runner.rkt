@@ -52,8 +52,18 @@
       (with-handlers
         ([exn:fail?
           (lambda (e)
-            (unless (regexp-match? #rx"can't begin with end-marker" (exn-message e))
-              (raise e)))])
+            ; "can't begin with end-marker" también es el mensaje que lanza sllgen
+            ; cuando el stream termina de forma abrupta por un error de sintaxis real
+            ; (p. ej. un paréntesis sin cerrar). Solo es un fin de stream benigno si
+            ; ya se parseó al menos un programa completo antes; si no, es un error
+            ; genuino y hay que mostrarlo en vez de tragárselo en silencio.
+            (unless (and (pair? all-steps)
+                         (regexp-match? #rx"can't begin with end-marker" (exn-message e)))
+              (set! all-steps
+                (cons (hasheq 'ast #f
+                              'output (format "✕ ~a" (exn-message e))
+                              'environments '())
+                      all-steps))))])
         (s (lambda (ast next-s)
              (reset-env-log!)
              (define val
