@@ -6,7 +6,7 @@
 '((whitespace
    (whitespace) skip)
   (comment
-   ("//" (arbno (not #\newline))) skip)
+   ("%" (arbno (not #\newline))) skip)
   (identifier
    (letter (arbno (or letter digit "?"))) symbol)
   (binary

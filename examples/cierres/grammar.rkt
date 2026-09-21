@@ -4,7 +4,7 @@
 
 (define lexical-spec
   '((whitespace (whitespace) skip)
-    (comment ("//" (arbno (not #\newline))) skip)
+    (comment ("%" (arbno (not #\newline))) skip)
     (identifier (letter (arbno (or letter digit "?"))) symbol)
     (number (digit (arbno digit)) number)))
 
