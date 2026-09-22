@@ -23,7 +23,7 @@ function makeModel(lines: string[]) {
     getLineContent: (n: number) => lines[n - 1] ?? '',
     getValue: () => lines.join('\n'),
     onDidChangeContent: vi.fn((cb: (event: any) => void) => { changeCallback = cb }),
-    pushEditOperations: vi.fn(),
+    undo: vi.fn(),
     triggerChange(event: any) { changeCallback?.(event) },
   }
 }
@@ -91,7 +91,7 @@ describe('CodeEditor', () => {
     expect(editor.focus).toHaveBeenCalledOnce()
   })
 
-  it('registers a change listener that restores a locked line that was edited', () => {
+  it('undoes the edit when it touches a locked line', () => {
     const onChange = vi.fn()
     render(<CodeEditor value="locked\nfree" onChange={onChange} glossaryTerms={[]} lockedLines={[1]} />)
     const model = makeModel(['locked', 'free'])
@@ -102,7 +102,23 @@ describe('CodeEditor', () => {
     model.triggerChange({
       changes: [{ range: { startLineNumber: 1, endLineNumber: 1 }, text: 'hacked' }],
     })
-    expect(model.pushEditOperations).toHaveBeenCalledOnce()
+    expect(model.undo).toHaveBeenCalledOnce()
+    expect(onChange).toHaveBeenCalledWith(model.getValue())
+  })
+
+  it('undoes a bulk edit (e.g. select-all + cut) that spans several locked lines, instead of corrupting them', () => {
+    const onChange = vi.fn()
+    render(<CodeEditor value="a\nlocked\nb\nc" onChange={onChange} glossaryTerms={[]} lockedLines={[2]} />)
+    const model = makeModel(['a', 'locked', 'b', 'c'])
+    const editor = makeEditor(model)
+    ;(propsRef.current.onMount as OnMount)(editor as any, monaco)
+
+    // Selecciona todo el documento (líneas 1-4) y lo reemplaza con '' — el
+    // rango de este único cambio cubre la línea bloqueada 2.
+    model.triggerChange({
+      changes: [{ range: { startLineNumber: 1, endLineNumber: 4 }, text: '' }],
+    })
+    expect(model.undo).toHaveBeenCalledOnce()
     expect(onChange).toHaveBeenCalledWith(model.getValue())
   })
 
@@ -115,7 +131,7 @@ describe('CodeEditor', () => {
     model.triggerChange({
       changes: [{ range: { startLineNumber: 1, endLineNumber: 1 }, text: 'a\nnew-line' }],
     })
-    expect(model.pushEditOperations).not.toHaveBeenCalled()
+    expect(model.undo).not.toHaveBeenCalled()
   })
 
   it('does not shift locked lines when the edit does not change line count', () => {
@@ -127,6 +143,6 @@ describe('CodeEditor', () => {
     model.triggerChange({
       changes: [{ range: { startLineNumber: 1, endLineNumber: 1 }, text: 'aa' }],
     })
-    expect(model.pushEditOperations).not.toHaveBeenCalled()
+    expect(model.undo).not.toHaveBeenCalled()
   })
 })

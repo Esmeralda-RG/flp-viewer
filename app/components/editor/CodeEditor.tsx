@@ -10,35 +10,28 @@ import { registerRacketCompletionProvider } from '@/app/lib/racket-completion'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
-type Monaco = Parameters<OnMount>[1]
 type ContentChanges = MonacoEditorNS.IModelContentChangedEvent['changes']
 
-function computeRestoreOps(
-  changes: ContentChanges,
-  lineMap: Map<number, string>,
-  model: MonacoEditorNS.ITextModel,
-  monaco: Monaco,
-): MonacoEditorNS.IIdentifiedSingleEditOperation[] {
-  const ops: MonacoEditorNS.IIdentifiedSingleEditOperation[] = []
-  for (const change of changes) {
+// Si una edición pisa una o más líneas bloqueadas no se reconstruye el
+// contenido a mano (eso asume que la línea sigue existiendo en la misma
+// posición tras la edición, lo cual se rompe con cualquier edición masiva
+// — p. ej. seleccionar todo y cortar — dejando el bloque en una posición
+// que ya no existe). En su lugar se deshace la edición completa con
+// model.undo(): es correcto para cualquier forma de edición y de paso no
+// ensucia la pila de undo con una operación sintética extra.
+function changesTouchLockedLines(changes: ContentChanges, lockedLines: Set<number>): boolean {
+  return changes.some((change) => {
     const { startLineNumber, endLineNumber } = change.range
-    for (const [lockedLine, lockedContent] of lineMap) {
-      if (startLineNumber > lockedLine || endLineNumber < lockedLine) continue
-      const currentLen = lockedLine <= model.getLineCount()
-        ? model.getLineContent(lockedLine).length
-        : 0
-      ops.push({
-        range: new monaco.Range(lockedLine, 1, lockedLine, Math.max(1, currentLen + 1)),
-        text: lockedContent,
-      })
+    for (const lockedLine of lockedLines) {
+      if (startLineNumber <= lockedLine && lockedLine <= endLineNumber) return true
     }
-  }
-  return ops
+    return false
+  })
 }
 
 // Cuando una edición inserta/borra líneas por encima de una línea bloqueada,
-// su número de línea cambia — hay que re-mapear lineMap al nuevo desplazamiento.
-function shiftLockedLines(lineMap: Map<number, string>, changes: ContentChanges): void {
+// su número de línea cambia — hay que re-mapear lockedLines al nuevo desplazamiento.
+function shiftLockedLines(lockedLines: Set<number>, changes: ContentChanges): void {
   const reverseChanges = [...changes].sort((a, b) => b.range.startLineNumber - a.range.startLineNumber)
 
   for (const change of reverseChanges) {
@@ -48,10 +41,10 @@ function shiftLockedLines(lineMap: Map<number, string>, changes: ContentChanges)
     const delta = added - removed
     if (delta === 0) continue
 
-    const next = new Map<number, string>()
-    for (const [n, content] of lineMap) next.set(n > pivot ? n + delta : n, content)
-    lineMap.clear()
-    for (const [k, v] of next) lineMap.set(k, v)
+    const next = new Set<number>()
+    for (const n of lockedLines) next.add(n > pivot ? n + delta : n)
+    lockedLines.clear()
+    for (const n of next) lockedLines.add(n)
   }
 }
 
@@ -72,16 +65,14 @@ export default function CodeEditor({
     const model = editor.getModel()
     if (!model) { editor.focus(); return }
 
-    const lineMap = new Map<number, string>()
+    const lockedLineSet = new Set<number>()
     if (lockedLines?.length) {
       for (const n of lockedLines) {
-        if (n >= 1 && n <= model.getLineCount()) {
-          lineMap.set(n, model.getLineContent(n))
-        }
+        if (n >= 1 && n <= model.getLineCount()) lockedLineSet.add(n)
       }
     }
 
-    const decorations = Array.from(lineMap.keys()).map((n) => ({
+    const decorations = Array.from(lockedLineSet).map((n) => ({
       range: new monaco.Range(n, 1, n, 1),
       options: {
         isWholeLine: true,
@@ -95,7 +86,7 @@ export default function CodeEditor({
 
     const applyDecorations = () => {
       decorationsRef.current!.set(
-        Array.from(lineMap.keys()).map((n) => ({
+        Array.from(lockedLineSet).map((n) => ({
           range: new monaco.Range(n, 1, n, 1),
           options: {
             isWholeLine: true,
@@ -109,26 +100,32 @@ export default function CodeEditor({
 
     applyDecorations()
 
-    if (!lineMap.size) { editor.focus(); return }
+    if (!lockedLineSet.size) { editor.focus(); return }
 
     let reverting = false
 
     model.onDidChangeContent((event) => {
       if (reverting) return
-      const changes = [...event.changes].sort(
-        (a, b) => a.range.startLineNumber - b.range.startLineNumber,
-      )
-      const restoreOps = computeRestoreOps(changes, lineMap, model, monaco)
 
-      if (restoreOps.length) {
+      if (changesTouchLockedLines(event.changes, lockedLineSet)) {
         reverting = true
-        model.pushEditOperations([], restoreOps, () => null)
+        model.undo()
         reverting = false
+        // El onChange nativo de Monaco ya disparó con el contenido sin deshacer
+        // (se registra antes que este listener) — resincroniza React con el
+        // valor correcto del modelo, o la próxima vez que el `value` controlado
+        // se reaplique, reintroduce la edición que acabamos de deshacer.
         onChange(model.getValue())
+        // Las decoraciones "locked-line" siguen su rango a través de la edición
+        // (isWholeLine) — si el undo reinsertó todo el texto borrado dentro de
+        // ese rango, la decoración se expande para cubrirlo entero. Recalcularlas
+        // desde lockedLineSet (ya válido: el documento volvió a su estado previo)
+        // en vez de confiar en el tracking automático de Monaco.
+        applyDecorations()
         return
       }
 
-      shiftLockedLines(lineMap, event.changes)
+      shiftLockedLines(lockedLineSet, event.changes)
       applyDecorations()
     })
 
