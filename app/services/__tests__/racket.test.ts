@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { runTrace, valueToString } from '../racket'
 
 function mockFetchOnce(response: Partial<Response> & { jsonBody?: unknown }) {
@@ -35,6 +35,12 @@ describe('valueToString', () => {
 
   it('falls back to JSON.stringify for untyped objects', () => {
     expect(valueToString({ foo: 1 })).toBe('{"foo":1}')
+  })
+
+  it('renders symbols, bigints and functions via toString', () => {
+    expect(valueToString(Symbol('s'))).toBe('Symbol(s)')
+    expect(valueToString(BigInt(10))).toBe('10')
+    expect(valueToString(() => {})).toContain('=>')
   })
 })
 
@@ -99,6 +105,76 @@ describe('runTrace', () => {
     expect(result.steps).toEqual([])
     expect(result.ast).toBeNull()
     expect(result.output).toBeNull()
+  })
+
+  it('converts a top-level array ast node, empty or not, into a list node', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [
+          { ast: [], output: null, environments: [] },
+          { ast: [1, 2], output: null, environments: [] },
+        ],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.steps[0].ast).toEqual({ type: 'list' })
+    expect(result.steps[1].ast).toEqual({
+      type: 'list',
+      children: [{ type: 'number', value: 1 }, { type: 'number', value: 2 }],
+    })
+  })
+
+  it('falls back to a JSON string type for objects without a string "type" field', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{ ast: { foo: 'bar' }, output: null, environments: [] }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.ast).toEqual({ type: '{"foo":"bar"}' })
+  })
+
+  it('leaves children undefined when a typed ast node has no fields', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{ ast: { type: 'lit-exp' }, output: null, environments: [] }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.ast).toEqual({ type: 'lit-exp' })
+  })
+
+  it('derives lambda, void, struct and unknown binding types from env frames', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{
+          ast: null,
+          output: null,
+          environments: [{
+            tag: 'extend',
+            frames: [{
+              proc: { type: 'procedure' },
+              vd: { type: 'void' },
+              s: { type: 'point', fields: [1, 2] },
+              flag: true,
+              nothing: null,
+            }],
+          }],
+        }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.environments[0].frames[0]).toEqual([
+      { name: 'proc', value: '<procedure>', type: 'lambda' },
+      { name: 'vd', value: '<void>', type: 'void' },
+      { name: 's', value: '<point>', type: 'struct' },
+      { name: 'flag', value: 'true', type: 'boolean' },
+      { name: 'nothing', value: 'null', type: 'unknown' },
+    ])
   })
 
   it('propagates the abort signal to fetch', async () => {

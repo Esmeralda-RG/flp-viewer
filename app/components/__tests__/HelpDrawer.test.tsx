@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HelpDrawer from '../help/HelpDrawer'
 import type { HelpSection } from '@/app/types/help'
+import type { Example } from '@/app/types/examples'
 
 const richMd = `# Título principal
 
@@ -51,7 +52,39 @@ function makeProps(overrides = {}) {
   }
 }
 
+const sectionsWithRelated: HelpSection[] = [
+  { id: 'env', icon: '🌐', title: 'Ambiente', order: 1, md: '# Ambiente\nExplica ligadura y asignación.', relatedExample: 'estado' },
+]
+const relatedExamples: Example[] = [{ id: 'estado', label: 'Estado y asignación', description: '', code: '' }]
+
 describe('HelpDrawer', () => {
+  describe('related example', () => {
+    it('shows a banner with a load button when the section has a related example', () => {
+      render(<HelpDrawer {...makeProps({ sections: sectionsWithRelated, examples: relatedExamples })} />)
+      expect(screen.getByText('Estado y asignación')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Cargar ejemplo' })).toBeEnabled()
+    })
+
+    it('calls onLoadExample with the related example when clicked', async () => {
+      const onLoadExample = vi.fn()
+      render(<HelpDrawer {...makeProps({ sections: sectionsWithRelated, examples: relatedExamples, onLoadExample })} />)
+      await userEvent.click(screen.getByRole('button', { name: 'Cargar ejemplo' }))
+      expect(onLoadExample).toHaveBeenCalledWith(relatedExamples[0])
+    })
+
+    it('disables the button and relabels it when the example is already loaded', () => {
+      render(<HelpDrawer {...makeProps({
+        sections: sectionsWithRelated, examples: relatedExamples, currentExampleId: 'estado',
+      })} />)
+      expect(screen.getByRole('button', { name: 'Ejemplo cargado' })).toBeDisabled()
+    })
+
+    it('shows no banner when the related example id does not match any example', () => {
+      render(<HelpDrawer {...makeProps({ sections: sectionsWithRelated, examples: [] })} />)
+      expect(screen.queryByRole('button', { name: /Cargar ejemplo|Ejemplo cargado/ })).not.toBeInTheDocument()
+    })
+  })
+
   it('renders nothing when closed and not yet visible', () => {
     const { container } = render(<HelpDrawer {...makeProps({ open: false })} />)
     expect(container).toBeEmptyDOMElement()
