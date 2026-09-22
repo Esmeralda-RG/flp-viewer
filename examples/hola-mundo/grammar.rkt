@@ -8,7 +8,7 @@
     (comment
      ("%" (arbno (not #\newline))) skip)
     (identifier
-     (letter (arbno (or letter digit "?" "$"))) symbol)))
+     ((or letter digit) (arbno (or letter digit "?" "$"))) symbol)))
 
 (define grammar
   '(

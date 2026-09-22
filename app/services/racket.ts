@@ -1,5 +1,5 @@
 import type { ASTNode } from '@/app/types/ast'
-import type { EnvFrame, Binding } from '@/app/types/environment'
+import type { EnvFrame, Binding, FrameKind } from '@/app/types/environment'
 import type { EditorFileLike, StepResult, TraceResult, RawSnapshot } from '@/app/types/racket'
 
 // ── Conversión del AST ────────────────────────────────────────────────────────
@@ -68,7 +68,12 @@ function valueType(v: unknown): string {
 function frameLabel(tag: unknown): string {
   if (tag === 'empty-env') return 'empty-env'
   if (tag === 'init-env') return 'init-env'
+  if (tag === 'assign') return 'asignación'
   return 'extend'
+}
+
+function frameKind(tag: unknown): FrameKind {
+  return tag === 'assign' ? 'assignment' : 'binding'
 }
 
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
@@ -79,7 +84,7 @@ function toEnvFrames(raw: unknown[]): EnvFrame[] {
         name, value: valueToString(val), type: valueType(val),
       }))
     )
-    return { label: frameLabel(s.tag), frames }
+    return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames }
   })
 }
 

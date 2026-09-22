@@ -1,19 +1,22 @@
 import type { FrameCardProps } from '@/app/types/props'
-import { cardHeight, VALUE_COLORS, CARD_W, CARD_H_HEADER, CARD_H_ROW, CARD_H_SEP, CARD_PAD_V, CARD_RX } from '@/app/lib/env-layout'
+import { cardHeight, VALUE_COLORS, FRAME_HEADER_FILL, FRAME_LABEL_COLOR, CARD_W, CARD_H_HEADER, CARD_H_ROW, CARD_H_SEP, CARD_PAD_V, CARD_RX } from '@/app/lib/env-layout'
 
 export default function FrameCard({ frame, x, y }: Readonly<FrameCardProps>) {
   const h = cardHeight(frame)
+  const kind = frame.kind ?? 'binding'
+  const headerFill = FRAME_HEADER_FILL[kind]
+  const labelColor = FRAME_LABEL_COLOR[kind]
   let cursor = CARD_H_HEADER + CARD_PAD_V
 
   return (
     <g transform={`translate(${x},${y})`}>
       <rect x={3} y={4} width={CARD_W} height={h} rx={CARD_RX} fill="rgba(0,0,0,0.35)" />
       <rect width={CARD_W} height={h} rx={CARD_RX} fill="#252526" stroke="#3c3c3c" strokeWidth={1} />
-      <rect width={CARD_W} height={CARD_H_HEADER} rx={CARD_RX} fill="#2d2d30" />
-      <rect y={CARD_H_HEADER - CARD_RX} width={CARD_W} height={CARD_RX} fill="#2d2d30" />
+      <rect width={CARD_W} height={CARD_H_HEADER} rx={CARD_RX} fill={headerFill} />
+      <rect y={CARD_H_HEADER - CARD_RX} width={CARD_W} height={CARD_RX} fill={headerFill} />
       <text
         x={CARD_W / 2} y={CARD_H_HEADER / 2 + 5}
-        textAnchor="middle" fill="#a1a1aa"
+        textAnchor="middle" fill={labelColor}
         fontSize={11} fontFamily="ui-monospace,monospace" fontWeight={600}
       >
         {frame.label}

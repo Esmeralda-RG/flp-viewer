@@ -69,7 +69,12 @@ describe('runTrace', () => {
           {
             ast: { type: 'call-exp', fields: [true, 'x'] },
             output: 42,
-            environments: [{ tag: 'empty-env', frames: [] }, { tag: 'init-env', frames: [{ x: 1 }] }, { tag: 'other', frames: [{ y: [1, 2] }] }],
+            environments: [
+              { tag: 'empty-env', frames: [] },
+              { tag: 'init-env', frames: [{ x: 1 }] },
+              { tag: 'other', frames: [{ y: [1, 2] }] },
+              { tag: 'assign', frames: [{ x: 9 }] },
+            ],
           },
         ],
       },
@@ -78,9 +83,10 @@ describe('runTrace', () => {
     expect(result.ast).toEqual({ type: 'call-exp', children: [{ type: 'boolean', value: true }, { type: 'string', value: 'x' }] })
     expect(result.output).toBe('42')
     expect(result.environments).toEqual([
-      { label: 'empty-env', frames: [] },
-      { label: 'init-env', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
-      { label: 'extend', frames: [[{ name: 'y', value: '[1, 2]', type: 'list' }]] },
+      { label: 'empty-env', kind: 'binding', frames: [] },
+      { label: 'init-env', kind: 'binding', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
+      { label: 'extend', kind: 'binding', frames: [[{ name: 'y', value: '[1, 2]', type: 'list' }]] },
+      { label: 'asignación', kind: 'assignment', frames: [[{ name: 'x', value: '9', type: 'number' }]] },
     ])
   })
 

@@ -4,9 +4,11 @@ export interface Binding {
   type: string
 }
 
+export type FrameKind = 'binding' | 'assignment'
+
 export interface EnvFrame {
   label: string
-
+  kind?: FrameKind
   frames: Binding[][]
 }
 

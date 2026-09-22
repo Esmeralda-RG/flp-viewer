@@ -14,7 +14,10 @@ const RACKET_BIN = process.env.RACKET_BIN ?? 'racket'
 const RKT_DIR = join(process.cwd(), 'app/api/run')
 const RUNNER_RKT      = readFileSync(join(RKT_DIR, '_runner.rkt'), 'utf8')
 const TRACKING_BLOCK  = readFileSync(join(RKT_DIR, '_tracking.rkt'), 'utf8')
+const TRACKING_ASSIGN_BLOCK = readFileSync(join(RKT_DIR, '_tracking-assign.rkt'), 'utf8')
 const STREAM_PARSER_BLOCK = readFileSync(join(RKT_DIR, '_stream-parser.rkt'), 'utf8')
+
+const SUPPORTS_ASSIGN_TRACKING = /\(define\s+apply-env-ref\b/
 
 // f.name viene del cliente: rechaza cualquier valor que no sea un nombre de archivo
 // plano (sin '..' ni separadores de ruta) para evitar escribir fuera del tmpdir.
@@ -23,12 +26,15 @@ function isSafeFileName(name: string): boolean {
 }
 
 function injectRuntime(name: string, content: string): string {
-  if (name === 'environment.rkt') return content + TRACKING_BLOCK
+  if (name === 'environment.rkt') {
+    const assignBlock = SUPPORTS_ASSIGN_TRACKING.test(content) ? TRACKING_ASSIGN_BLOCK : ''
+    return content + TRACKING_BLOCK + assignBlock
+  }
   if (name === 'main.rkt') return content + STREAM_PARSER_BLOCK
   return content
 }
 
-// Elimina la sección verbose "context...: / location..." del stderr de Racket
+
 function cleanStderr(raw: string): string {
   const lines = raw.split('\n')
   const kept: string[] = []

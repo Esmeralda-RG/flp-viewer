@@ -1,4 +1,4 @@
-import type { EnvFrame } from '@/app/types/environment'
+import type { EnvFrame, FrameKind } from '@/app/types/environment'
 
 export const CARD_W = 230
 export const CARD_H_HEADER = 34
@@ -16,6 +16,16 @@ export const VALUE_COLORS: Record<string, string> = {
   list:    '#67e8f9',
   void:    '#71717a',
   struct:  '#f9a8d4',
+}
+
+export const FRAME_HEADER_FILL: Record<FrameKind, string> = {
+  binding:    '#2d2d30',
+  assignment: '#3a2712',
+}
+
+export const FRAME_LABEL_COLOR: Record<FrameKind, string> = {
+  binding:    '#a1a1aa',
+  assignment: '#fbbf24',
 }
 
 export function cardHeight(frame: EnvFrame): number {
