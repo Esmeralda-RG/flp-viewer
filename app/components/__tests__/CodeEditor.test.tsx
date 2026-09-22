@@ -21,6 +21,7 @@ function makeModel(lines: string[]) {
   return {
     getLineCount: () => lines.length,
     getLineContent: (n: number) => lines[n - 1] ?? '',
+    getValue: () => lines.join('\n'),
     onDidChangeContent: vi.fn((cb: (event: any) => void) => { changeCallback = cb }),
     pushEditOperations: vi.fn(),
     triggerChange(event: any) { changeCallback?.(event) },
@@ -35,7 +36,14 @@ function makeEditor(model: ReturnType<typeof makeModel> | null) {
   }
 }
 
-const monaco = { Range: vi.fn(function (...args: number[]) { return { args } }) } as any
+const monaco = {
+  Range: vi.fn(function (...args: number[]) { return { args } }),
+  languages: {
+    registerHoverProvider: vi.fn(),
+    registerCompletionItemProvider: vi.fn(),
+    CompletionItemKind: { Function: 1, Keyword: 2, Variable: 3 },
+  },
+} as any
 
 describe('CodeEditor', () => {
   beforeEach(() => {
@@ -84,7 +92,8 @@ describe('CodeEditor', () => {
   })
 
   it('registers a change listener that restores a locked line that was edited', () => {
-    render(<CodeEditor value="locked\nfree" onChange={vi.fn()} glossaryTerms={[]} lockedLines={[1]} />)
+    const onChange = vi.fn()
+    render(<CodeEditor value="locked\nfree" onChange={onChange} glossaryTerms={[]} lockedLines={[1]} />)
     const model = makeModel(['locked', 'free'])
     const editor = makeEditor(model)
     ;(propsRef.current.onMount as OnMount)(editor as any, monaco)
@@ -94,6 +103,7 @@ describe('CodeEditor', () => {
       changes: [{ range: { startLineNumber: 1, endLineNumber: 1 }, text: 'hacked' }],
     })
     expect(model.pushEditOperations).toHaveBeenCalledOnce()
+    expect(onChange).toHaveBeenCalledWith(model.getValue())
   })
 
   it('shifts tracked locked lines when unrelated edits add or remove lines', () => {

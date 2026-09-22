@@ -104,6 +104,12 @@ describe('generateGrammarRkt', () => {
     expect(out).toContain('(or letter digit "?" "$")')
   })
 
+  it('generates a text/string token whose pattern consumes the closing quote', () => {
+    const ast = parseStr('<expr> ::= <text>')
+    const out = generateGrammarRkt(ast, 'text')
+    expect(out).toContain(String.raw`(text ("\"" (arbno (not #\")) "\"") string)`)
+  })
+
   it('lets a raw sllgen line override the comment token instead of duplicating it', () => {
     const ast = parseStr('<expr> ::= <number>')
     const out = generateGrammarRkt(ast, String.raw`(comment ("//" (arbno (not #\newline))) skip)`)

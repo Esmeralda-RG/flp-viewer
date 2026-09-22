@@ -24,6 +24,15 @@ La **Forma de Backus-Naur** (BNF) es el lenguaje con el que describes la sintaxi
 - **`"texto"`** → terminal (un símbolo literal del lenguaje).
 - **`|`** → alternativa (una u otra).
 
+## Dos nombres obligatorios: `<program>` y `<expression>`
+
+El generador siempre arma un `main.rkt` con un intérprete fijo que llama a `eval-program` sobre el punto de entrada, y `eval-program` a su vez siempre llama a `eval-expression`. Por eso tu gramática necesita, sí o sí:
+
+- una regla llamada exactamente **`<program>`**,
+- una regla llamada **`<expression>`** (o su sinónimo **`<expr>`**).
+
+Si falta cualquiera de las dos, el generador te lo dice antes de dejarte generar los archivos — de lo contrario terminarías con un `main.rkt` que ni siquiera carga en Racket (`eval-program: unbound identifier`).
+
 ## La gramática del Lenguaje LET
 
 Este es exactamente el lenguaje que define el ejemplo cargado:

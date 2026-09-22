@@ -6,6 +6,7 @@ import type { OnMount } from '@monaco-editor/react'
 import type { editor as MonacoEditorNS } from 'monaco-editor'
 import type { CodeEditorProps } from '@/app/types/props'
 import { registerGlossaryHoverProvider } from '@/app/lib/glossary-hover'
+import { registerRacketCompletionProvider } from '@/app/lib/racket-completion'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
@@ -66,6 +67,7 @@ export default function CodeEditor({
 
   const handleMount: OnMount = (editor, monaco) => {
     registerGlossaryHoverProvider(monaco, glossaryTerms)
+    registerRacketCompletionProvider(monaco, glossaryTerms)
 
     const model = editor.getModel()
     if (!model) { editor.focus(); return }
@@ -122,6 +124,7 @@ export default function CodeEditor({
         reverting = true
         model.pushEditOperations([], restoreOps, () => null)
         reverting = false
+        onChange(model.getValue())
         return
       }
 

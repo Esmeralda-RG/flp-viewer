@@ -70,4 +70,25 @@ describe('runPipeline', () => {
     const result = runPipeline('float', bnf)
     expect(result.grammarRkt).toContain('float')
   })
+
+  it('reports a clear error and generates nothing when <program> is missing', () => {
+    const bnf = '<expression> ::= <number>'
+    const result = runPipeline('', bnf)
+    expect(result.errors.some(e => e.includes('<program>'))).toBe(true)
+    expect(result.grammarRkt).toBe('')
+    expect(result.mainRkt).toBe('')
+  })
+
+  it('reports a clear error when neither <expression> nor <expr> exists', () => {
+    const bnf = '<program> ::= <stmt>\n<stmt> ::= <number>'
+    const result = runPipeline('', bnf)
+    expect(result.errors.some(e => e.includes('<expression>') || e.includes('<expr>'))).toBe(true)
+    expect(result.grammarRkt).toBe('')
+  })
+
+  it('accepts <expr> as a synonym for <expression>', () => {
+    const bnf = '<program> ::= <expr>\n<expr> ::= <number>'
+    const result = runPipeline('', bnf)
+    expect(result.errors).toEqual([])
+  })
 })

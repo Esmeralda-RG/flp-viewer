@@ -38,7 +38,7 @@ const LEX_KEYWORDS: Record<string, string[]> = {
     '(hex ("-" "hx" (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F") (arbno (or "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "A" "B" "C" "D" "E" "F"))) string)',
   ],
   text: [
-    String.raw`(text ("\"" (arbno (not #\"))) string)`,
+    String.raw`(text ("\"" (arbno (not #\")) "\"") string)`,
   ],
 }
 
