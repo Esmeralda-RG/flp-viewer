@@ -60,6 +60,17 @@ describe('generateMainRkt', () => {
     expect(content).toContain('; (interpreter)')
   })
 
+  it('leaves an unlocked gap between sllgen:make-define-datatypes and scan&parse for auxiliary defines', () => {
+    const { content, lockedLines } = gen(grammar)
+    const lines = content.split('\n')
+    const datatypesLine = lines.findIndex((l) => l.includes('sllgen:make-define-datatypes')) + 1
+    const scanParseLine = lines.findIndex((l) => l.includes('(define scan&parse')) + 1
+    const locked = new Set(lockedLines)
+    const gapLines = []
+    for (let ln = datatypesLine + 1; ln < scanParseLine; ln++) gapLines.push(ln)
+    expect(gapLines.some((ln) => !locked.has(ln))).toBe(true)
+  })
+
   describe('arbno groups with multiple symbols', () => {
     // SLLGEN expande `(arbno a b)` en dos campos paralelos (uno por símbolo
     // no terminal), no en un único campo de tuplas — confirmado ejecutando

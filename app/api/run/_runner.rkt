@@ -1,30 +1,20 @@
 #lang racket
 (require json)
+(require "_json-value.rkt")
 (require "grammar.rkt")
 (require "environment.rkt")
 (require "utils.rkt")
 (require "main.rkt")
 
-(define (json-value v)
-  (cond
-    [(or (null? v) (boolean? v) (number? v) (string? v)) v]
-    [(symbol? v) (symbol->string v)]
-    [(pair? v) (map json-value v)]
-    [(vector? v) (map json-value (vector->list v))]
-    [(struct? v)
-     (let* ([data     (struct->vector v)]
-            [raw-type (symbol->string (vector-ref data 0))]
-            [type     (regexp-replace #rx"^struct:" raw-type "")]
-            [fields   (for/list ([i (in-range 1 (vector-length data))])
-                        (json-value (vector-ref data i)))])
-       (hasheq 'type type 'fields fields))]
-    [(procedure? v) (hasheq 'type "procedure")]
-    [else (format "~a" v)]))
-
 (define (frame->json frame)
-  ;; Las claves del hash JSON deben ser símbolos en la librería json de Racket
-  (for/hasheq ([binding frame])
-    (values (car binding) (json-value (cdr binding)))))
+  ;; Un hasheq no conserva el orden de declaración al serializar (las claves
+  ;; salen en orden de hash, no de inserción); el panel necesita ese orden
+  ;; para mostrar las ligaduras tal como las escribió el estudiante.
+  ;; binding ya viene convertido a JSON (ver _tracking.rkt): se registra al
+  ;; momento de crear el marco, no al final del paso, para no mostrar el
+  ;; estado que una asignación posterior dejó en una celda compartida.
+  (for/list ([binding frame])
+    (hasheq 'name (symbol->string (car binding)) 'value (cdr binding))))
 
 (define (env-snapshot->json snapshot)
   (match snapshot

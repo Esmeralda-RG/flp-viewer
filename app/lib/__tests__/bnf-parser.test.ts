@@ -74,6 +74,20 @@ describe('parse', () => {
     expect(() => parseStr('<expr> ::= (separated-list <item>)')).toThrowError(ParseError)
   })
 
+  it('translates literal SLLGEN (arbno <item> ...) notation into the group shorthand', () => {
+    const ast = parseStr('<expr> ::= "begin" <expression> (arbno ";" <expression>) "end"')
+    const item = ast.rules[0].productions[0].items[2]
+    expect(item).toEqual({
+      kind: 'group',
+      op: '*',
+      items: [{ kind: 'terminal', value: ';' }, { kind: 'nonterminal', name: 'expression' }],
+    })
+  })
+
+  it('throws ParseError when arbno has no items', () => {
+    expect(() => parseStr('<expr> ::= (arbno)')).toThrowError(ParseError)
+  })
+
   it('parses [...] as optional group (?)', () => {
     const ast = parseStr('<expr> ::= ["opt"]')
     const item = ast.rules[0].productions[0].items[0]

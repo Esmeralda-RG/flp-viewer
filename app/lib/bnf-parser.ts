@@ -81,6 +81,20 @@ export function parse(tokens: Token[]): GrammarAST {
     return { kind: 'group', items: [elem, { kind: 'terminal', value: sep }], op: '*' }
   }
 
+  // Notación literal de SLLGEN: (arbno <item> ...), cero o más repeticiones
+  // de la secuencia. Se traduce al mismo BNFItem que produce nuestro propio
+  // azúcar (...)*, para que eopl-generator vuelva a emitir (arbno ...) en
+  // vez de aplanar "arbno" como si fuera un no-terminal más de la secuencia.
+  function tryArbnoCall(): BNFItem | null {
+    if (!(check('IDENT') && peek().value.toLowerCase() === 'arbno')) return null
+    consume('IDENT')
+    const items = parseGroupItems('RPAREN')
+    if (items.length === 0) {
+      throw new ParseError('Se esperaba al menos un elemento dentro de arbno', peek())
+    }
+    return { kind: 'group', items, op: '*' }
+  }
+
   function parseParenGroup(): BNFItem {
     consume('LPAREN')
     const sepList = trySeparatedListCall()
@@ -88,6 +102,12 @@ export function parse(tokens: Token[]): GrammarAST {
       if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar separated-list', peek())
       consume('RPAREN')
       return sepList
+    }
+    const arbno = tryArbnoCall()
+    if (arbno) {
+      if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar arbno', peek())
+      consume('RPAREN')
+      return arbno
     }
     const items = parseGroupItems('RPAREN')
     if (!check('RPAREN')) throw new ParseError('Se esperaba ")" para cerrar el grupo', peek())

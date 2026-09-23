@@ -13,11 +13,18 @@ const RACKET_BIN = process.env.RACKET_BIN ?? 'racket'
 
 const RKT_DIR = join(process.cwd(), 'app/api/run')
 const RUNNER_RKT      = readFileSync(join(RKT_DIR, '_runner.rkt'), 'utf8')
+const JSON_VALUE_RKT  = readFileSync(join(RKT_DIR, '_json-value.rkt'), 'utf8')
 const TRACKING_BLOCK  = readFileSync(join(RKT_DIR, '_tracking.rkt'), 'utf8')
 const TRACKING_ASSIGN_BLOCK = readFileSync(join(RKT_DIR, '_tracking-assign.rkt'), 'utf8')
+const TRACKING_INIT_ENV_BLOCK = readFileSync(join(RKT_DIR, '_tracking-init-env.rkt'), 'utf8')
 const STREAM_PARSER_BLOCK = readFileSync(join(RKT_DIR, '_stream-parser.rkt'), 'utf8')
 
 const SUPPORTS_ASSIGN_TRACKING = /\(define\s+apply-env-ref\b/
+// Solo envolvemos init-env cuando es un procedimiento definido en environment.rkt.
+// Algunos intérpretes del curso lo definen en main.rkt (init-env quedaría sin ligar
+// en este archivo) o como un valor ya construido (envolverlo lo volvería una
+// función y rompería a quien lo use como ambiente directamente).
+const SUPPORTS_INIT_ENV_TRACKING = /\(define\s+init-env\s*\(\s*lambda\b/
 
 // f.name viene del cliente: rechaza cualquier valor que no sea un nombre de archivo
 // plano (sin '..' ni separadores de ruta) para evitar escribir fuera del tmpdir.
@@ -28,7 +35,8 @@ function isSafeFileName(name: string): boolean {
 function injectRuntime(name: string, content: string): string {
   if (name === 'environment.rkt') {
     const assignBlock = SUPPORTS_ASSIGN_TRACKING.test(content) ? TRACKING_ASSIGN_BLOCK : ''
-    return content + TRACKING_BLOCK + assignBlock
+    const initEnvBlock = SUPPORTS_INIT_ENV_TRACKING.test(content) ? TRACKING_INIT_ENV_BLOCK : ''
+    return content + TRACKING_BLOCK + assignBlock + initEnvBlock
   }
   if (name === 'main.rkt') return content + STREAM_PARSER_BLOCK
   return content
@@ -71,6 +79,7 @@ export async function POST(request: Request) {
 
     await Promise.all(files.map((f) => writeFile(join(tmpDir!, f.name), injectRuntime(f.name, f.content), 'utf8')))
     await writeFile(join(tmpDir, '_runner.rkt'), RUNNER_RKT, 'utf8')
+    await writeFile(join(tmpDir, '_json-value.rkt'), JSON_VALUE_RKT, 'utf8')
 
     const { stdout, stderr } = await withRunSlot(request.signal, () =>
       execFileAsync(

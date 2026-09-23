@@ -9,7 +9,7 @@ export default function FrameCard({ frame, x, y }: Readonly<FrameCardProps>) {
   let cursor = CARD_H_HEADER + CARD_PAD_V
 
   return (
-    <g transform={`translate(${x},${y})`}>
+    <g transform={`translate(${x},${y})`} data-testid="env-frame" data-label={frame.label} data-kind={kind}>
       <rect x={3} y={4} width={CARD_W} height={h} rx={CARD_RX} fill="rgba(0,0,0,0.35)" />
       <rect width={CARD_W} height={h} rx={CARD_RX} fill="#252526" stroke="#3c3c3c" strokeWidth={1} />
       <rect width={CARD_W} height={CARD_H_HEADER} rx={CARD_RX} fill={headerFill} />
@@ -33,7 +33,7 @@ export default function FrameCard({ frame, x, y }: Readonly<FrameCardProps>) {
           const color = VALUE_COLORS[b.type] ?? '#d4d4d8'
           const val = b.value.length > 18 ? b.value.slice(0, 16) + '…' : b.value
           return (
-            <g key={`${si}-${b.name}`}>
+            <g key={`${si}-${b.name}`} data-testid="env-binding" data-name={b.name} data-value={b.value} data-type={b.type}>
               <text x={14} y={rowY + 15} fill="#e4e4e7" fontSize={11} fontFamily="ui-monospace,monospace">{b.name}</text>
               <text x={CARD_W / 2 - 6} y={rowY + 15} fill="#4b5563" fontSize={11} fontFamily="ui-monospace,monospace">=</text>
               <text x={CARD_W / 2 + 2} y={rowY + 15} fill={color} fontSize={11} fontFamily="ui-monospace,monospace">{val}</text>

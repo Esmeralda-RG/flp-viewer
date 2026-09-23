@@ -127,6 +127,12 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   L('')
   L('(sllgen:make-define-datatypes lexical-spec grammar)')
   L('')
+  // Único hueco sin bloquear fuera de los TODO de cada caso: sin él no hay
+  // dónde declarar un define-datatype auxiliar (p. ej. una clausura) antes
+  // de eval-expression, que es donde EOPL exige que aparezca ese `cases` lo vea.
+  U(';; Define aquí tipos o funciones auxiliares que necesites (p. ej. una clausura')
+  U(';; para procedimientos). Esta línea no está bloqueada: puedes reemplazarla.')
+  L('')
   L('; Front-end: análisis léxico (scanner) y sintáctico (parser)')
   L('(define scan&parse')
   L('  (sllgen:make-string-parser lexical-spec grammar))')

@@ -1,11 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { promisify } from 'node:util'
 
-const { execFileMock } = vi.hoisted(() => ({ execFileMock: vi.fn() }))
+const { execFileMock, writeFileMock } = vi.hoisted(() => ({ execFileMock: vi.fn(), writeFileMock: vi.fn() }))
 vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>()
   const mocked = Object.assign(execFileMock, { [promisify.custom]: vi.fn() })
   return { ...actual, execFile: mocked, default: { ...actual, execFile: mocked } }
+})
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>()
+  const wrapped = writeFileMock.mockImplementation((...args: Parameters<typeof actual.writeFile>) => actual.writeFile(...args))
+  return { ...actual, writeFile: wrapped, default: { ...actual, writeFile: wrapped } }
 })
 
 import { execFile } from 'node:child_process'
@@ -30,6 +35,7 @@ function makeRequest(body: unknown, signal = new AbortController().signal) {
 describe('POST /api/run', () => {
   beforeEach(() => {
     vi.mocked(execFileCustom()).mockReset()
+    writeFileMock.mockClear()
   })
 
   it('returns an error when no files are provided', async () => {
@@ -88,6 +94,36 @@ describe('POST /api/run', () => {
       testInput: 'x',
     }))
     expect(execFileCustom()).toHaveBeenCalled()
+  })
+
+  it('only wraps init-env when environment.rkt defines it as a procedure', async () => {
+    mockSuccess('ok', '')
+    await POST(makeRequest({
+      files: [{ name: 'environment.rkt', content: '(define init-env (lambda () (empty-env)))' }],
+      testInput: 'x',
+    }))
+    const envContent = writeFileMock.mock.calls.find(([p]) => String(p).endsWith('environment.rkt'))?.[1]
+    expect(envContent).toContain('FLP-VIEWER-TRACKING-INIT-ENV-START')
+  })
+
+  it('does not wrap init-env when it is defined in main.rkt instead of environment.rkt', async () => {
+    mockSuccess('ok', '')
+    await POST(makeRequest({
+      files: [{ name: 'environment.rkt', content: '(define apply-env-ref 1)' }],
+      testInput: 'x',
+    }))
+    const envContent = writeFileMock.mock.calls.find(([p]) => String(p).endsWith('environment.rkt'))?.[1]
+    expect(envContent).not.toContain('FLP-VIEWER-TRACKING-INIT-ENV-START')
+  })
+
+  it('does not wrap init-env when it is defined as a value, not a procedure', async () => {
+    mockSuccess('ok', '')
+    await POST(makeRequest({
+      files: [{ name: 'environment.rkt', content: '(define init-env (extend-env (list) (list) (empty-env)))' }],
+      testInput: 'x',
+    }))
+    const envContent = writeFileMock.mock.calls.find(([p]) => String(p).endsWith('environment.rkt'))?.[1]
+    expect(envContent).not.toContain('FLP-VIEWER-TRACKING-INIT-ENV-START')
   })
 
   it('reports a timeout error when the process is killed', async () => {

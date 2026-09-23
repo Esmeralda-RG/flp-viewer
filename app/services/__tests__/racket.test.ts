@@ -77,9 +77,9 @@ describe('runTrace', () => {
             output: 42,
             environments: [
               { tag: 'empty-env', frames: [] },
-              { tag: 'init-env', frames: [{ x: 1 }] },
-              { tag: 'other', frames: [{ y: [1, 2] }] },
-              { tag: 'assign', frames: [{ x: 9 }] },
+              { tag: 'init-env', frames: [[{ name: 'x', value: 1 }]] },
+              { tag: 'other', frames: [[{ name: 'y', value: [1, 2] }]] },
+              { tag: 'assign', frames: [[{ name: 'x', value: 9 }]] },
             ],
           },
         ],
@@ -156,13 +156,13 @@ describe('runTrace', () => {
           output: null,
           environments: [{
             tag: 'extend',
-            frames: [{
-              proc: { type: 'procedure' },
-              vd: { type: 'void' },
-              s: { type: 'point', fields: [1, 2] },
-              flag: true,
-              nothing: null,
-            }],
+            frames: [[
+              { name: 'proc', value: { type: 'procedure' } },
+              { name: 'vd', value: { type: 'void' } },
+              { name: 's', value: { type: 'point', fields: [1, 2] } },
+              { name: 'flag', value: true },
+              { name: 'nothing', value: null },
+            ]],
           }],
         }],
       },
@@ -171,7 +171,7 @@ describe('runTrace', () => {
     expect(result.environments[0].frames[0]).toEqual([
       { name: 'proc', value: '<procedure>', type: 'lambda' },
       { name: 'vd', value: '<void>', type: 'void' },
-      { name: 's', value: '<point>', type: 'struct' },
+      { name: 's', value: '<point 1 2>', type: 'struct' },
       { name: 'flag', value: 'true', type: 'boolean' },
       { name: 'nothing', value: 'null', type: 'unknown' },
     ])

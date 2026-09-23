@@ -111,7 +111,12 @@ export default function ConsoleOutput({
         ) : (
           <div className="space-y-0.5">
             {logs.map((log) => (
-              <div key={log.id} className={`flex gap-2 items-start ${levelStyles[log.level]}`}>
+              <div
+                key={log.id}
+                data-testid="console-line"
+                data-level={log.level}
+                className={`flex gap-2 items-start ${levelStyles[log.level]}`}
+              >
                 <span className="shrink-0 text-right w-6 opacity-70 pt-px">
                   {levelPrefix[log.level]}
                 </span>
@@ -142,6 +147,7 @@ export default function ConsoleOutput({
             </span>
             <textarea
               ref={textareaRef}
+              data-testid="console-input"
               value={inputValue}
               onChange={(e) => onInputChange(e.target.value)}
               onKeyDown={handleKeyDown}

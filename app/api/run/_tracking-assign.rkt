@@ -19,6 +19,6 @@
     (let* ([found (assq ref _ref-syms)]
            [result (_orig-setref! ref val)])
       (when found
-        (set! _env-log (cons (list 'assign (list (list (cons (cdr found) val)))) _env-log)))
+        (set! _env-log (cons (list 'assign (list (list (cons (cdr found) (json-value val))))) _env-log)))
       result)))
 ;; ──── FLP-VIEWER-TRACKING-ASSIGN-END ───────────────────────────────

@@ -51,6 +51,8 @@ export default function Navbar({
             {examples.map((ex) => (
               <button
                 key={ex.id}
+                data-testid="example-option"
+                data-example-id={ex.id}
                 onClick={() => { onExampleSelect(ex); setDropdownOpen(false) }}
                 className="w-full text-left px-3 py-2 hover:bg-white/10 transition-colors"
               >

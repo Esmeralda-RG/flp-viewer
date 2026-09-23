@@ -81,6 +81,7 @@ describe('generateGrammarRkt', () => {
     ['generates (separated-list ...) for [<A> ("sep" <A>)*] pattern', '<expr> ::= [<item> ("," <item>)*]', '(separated-list item ",")'],
     ['generates (separated-list ...) for legacy (A sep)* shorthand', '<expr> ::= (<item> ",")*', '(separated-list item ",")'],
     ['translates literal SLLGEN (separated-list <A> ",") call notation from course material', '<expr> ::= (separated-list <item> ",")', '(separated-list item ",")'],
+    ['translates literal SLLGEN (arbno <A> ...) call notation from course material', '<expr> ::= "begin" <expression> (arbno ";" <expression>) "end"', '(arbno ";" expression)'],
     ['flattens a bare group without quantifier', '<expr> ::= ("let" <identifier>)', '"let" identifier'],
     ['generates (arbno ...) for multi-item group with *', '<expr> ::= ("a" <b>)*', '(arbno "a" b)'],
     ['generates "X (arbno X)" for multi-item group with +', '<expr> ::= (<a> <b>)+', '(arbno a b)'],

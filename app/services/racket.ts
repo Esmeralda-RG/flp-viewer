@@ -1,6 +1,6 @@
 import type { ASTNode } from '@/app/types/ast'
 import type { EnvFrame, Binding, FrameKind } from '@/app/types/environment'
-import type { EditorFileLike, StepResult, TraceResult, RawSnapshot } from '@/app/types/racket'
+import type { EditorFileLike, StepResult, TraceResult, RawSnapshot, RawBinding } from '@/app/types/racket'
 
 // ── Conversión del AST ────────────────────────────────────────────────────────
 
@@ -42,7 +42,11 @@ export function valueToString(v: unknown): string {
   }
   if (typeof v === 'object') {
     const obj = v as Record<string, unknown>
-    if (typeof obj.type === 'string') return `<${obj.type}>`
+    if (typeof obj.type === 'string') {
+      const fields = Array.isArray(obj.fields) ? obj.fields : []
+      if (fields.length === 0) return `<${obj.type}>`
+      return `<${obj.type} ${fields.map(valueToString).join(' ')}>`
+    }
     return JSON.stringify(v)
   }
   if (typeof v === 'symbol' || typeof v === 'bigint' || typeof v === 'function') {
@@ -79,9 +83,9 @@ function frameKind(tag: unknown): FrameKind {
 function toEnvFrames(raw: unknown[]): EnvFrame[] {
   return raw.map((snap) => {
     const s = snap as RawSnapshot
-    const frames: Binding[][] = (s.frames ?? []).map(frame =>
-      Object.entries(frame).map(([name, val]) => ({
-        name, value: valueToString(val), type: valueType(val),
+    const frames: Binding[][] = (s.frames ?? []).map((frame: RawBinding[]) =>
+      frame.map(({ name, value }) => ({
+        name, value: valueToString(value), type: valueType(value),
       }))
     )
     return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames }

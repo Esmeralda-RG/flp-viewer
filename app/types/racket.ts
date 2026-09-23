@@ -22,7 +22,12 @@ export interface TraceResult {
   output: string | null
 }
 
+export interface RawBinding {
+  name: string
+  value: unknown
+}
+
 export interface RawSnapshot {
   tag: string
-  frames: Record<string, unknown>[]
+  frames: RawBinding[][]
 }
