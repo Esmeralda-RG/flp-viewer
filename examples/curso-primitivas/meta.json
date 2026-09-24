@@ -1,0 +1,13 @@
+{
+  "id": "curso-primitivas",
+  "label": "Curso: intérprete simple con primitivas",
+  "description": "El panel muestra el ambiente inicial del curso en un solo marco, x=1, y=2, z=3, a=4, b=5, c=6, donde se buscan las variables de cada primitiva.",
+  "activeFileId": "main",
+  "order": 20,
+  "files": [
+    { "id": "main",            "name": "main.rkt",        "language": "scheme" },
+    { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },
+    { "id": "environment-rkt", "name": "environment.rkt", "language": "scheme" },
+    { "id": "utils",           "name": "utils.rkt",       "language": "scheme" }
+  ]
+}

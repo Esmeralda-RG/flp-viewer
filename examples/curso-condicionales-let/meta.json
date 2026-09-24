@@ -1,0 +1,13 @@
+{
+  "id": "curso-condicionales-let",
+  "label": "Curso: condicionales y let",
+  "description": "El panel muestra un marco nuevo por cada let que llega a evaluarse, así que la secuencia cambia según la rama que tome el if.",
+  "activeFileId": "main",
+  "order": 21,
+  "files": [
+    { "id": "main",            "name": "main.rkt",        "language": "scheme" },
+    { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },
+    { "id": "environment-rkt", "name": "environment.rkt", "language": "scheme" },
+    { "id": "utils",           "name": "utils.rkt",       "language": "scheme" }
+  ]
+}

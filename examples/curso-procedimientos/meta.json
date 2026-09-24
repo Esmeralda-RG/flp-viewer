@@ -1,0 +1,13 @@
+{
+  "id": "curso-procedimientos",
+  "label": "Curso: procedimientos y cierres",
+  "description": "Cada aplicación abre un marco con los parámetros sobre el ambiente que la clausura capturó al crearse, no sobre el de la llamada.",
+  "activeFileId": "main",
+  "order": 22,
+  "files": [
+    { "id": "main",            "name": "main.rkt",        "language": "scheme" },
+    { "id": "grammar-rkt",     "name": "grammar.rkt",     "language": "scheme" },
+    { "id": "environment-rkt", "name": "environment.rkt", "language": "scheme" },
+    { "id": "utils",           "name": "utils.rkt",       "language": "scheme" }
+  ]
+}
