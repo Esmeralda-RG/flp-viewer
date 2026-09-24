@@ -31,4 +31,5 @@ export interface RawSnapshot {
   tag: string
   frames: RawBinding[][]
   targetFrame: number | null
+  parentFrame: number | null
 }

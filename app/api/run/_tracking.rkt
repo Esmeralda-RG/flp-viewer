@@ -21,12 +21,22 @@
 (set! empty-env
   (lambda ()
     (let ([env (_orig-empty-env)])
-      (set! _env-log (cons (list 'empty-env '() #f) _env-log))
+      ;; Se registra también aquí para que el primer extend-env de la cadena
+      ;; encuentre un padre válido (ver frame-position-of más abajo).
+      (hash-set! _frame-positions env (length _env-log))
+      (set! _env-log (cons (list 'empty-env '() #f #f) _env-log))
       env)))
 (define _orig-extend-env extend-env)
 (set! extend-env
   (lambda (syms vals env)
+    ;; El padre real de este marco es `env`, el ambiente que extend-env
+    ;; recibió — no "el marco anterior en el log". Casi siempre coinciden
+    ;; (un let normal extiende lo último creado), pero al aplicar un
+    ;; procedimiento el nuevo marco extiende el ambiente donde ESE
+    ;; procedimiento se creó, que puede quedar varias posiciones atrás (o,
+    ;; en llamadas recursivas repetidas, ser el mismo para cada llamada).
     (let* ([tag (if _in-init-env? 'init-env 'extend)]
+           [parent-index (frame-position-of env)]
            [new-env (_orig-extend-env syms vals env)]
            ;; Se convierte a JSON aquí, no al final del paso: una clausura o
            ;; una celda capturada por este marco puede mutarse más adelante
@@ -36,6 +46,6 @@
       ;; La posición se guarda ANTES de agregar esta entrada: es justo el
       ;; índice que va a tener una vez invertido _env-log al final del paso.
       (hash-set! _frame-positions new-env (length _env-log))
-      (set! _env-log (cons (list tag (list bindings) #f) _env-log))
+      (set! _env-log (cons (list tag (list bindings) #f parent-index) _env-log))
       new-env)))
 ;; ──── FLP-VIEWER-TRACKING-END ──────────────────────────────────────

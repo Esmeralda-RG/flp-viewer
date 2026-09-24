@@ -11,6 +11,7 @@ export interface EnvFrame {
   kind?: FrameKind
   frames: Binding[][]
   targetFrameIndex?: number
+  parentFrameIndex?: number
 }
 
 export interface Transform {

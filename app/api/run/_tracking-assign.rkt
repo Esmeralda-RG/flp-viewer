@@ -29,6 +29,6 @@
         (let* ([sym         (cadr found)]
                [owner-env   (caddr found)]
                [frame-index (frame-position-of owner-env)])
-          (set! _env-log (cons (list 'assign (list (list (cons sym (json-value val)))) frame-index) _env-log))))
+          (set! _env-log (cons (list 'assign (list (list (cons sym (json-value val)))) frame-index #f) _env-log))))
       result)))
 ;; ──── FLP-VIEWER-TRACKING-ASSIGN-END ───────────────────────────────

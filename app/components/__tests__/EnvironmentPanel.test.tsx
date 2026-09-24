@@ -13,12 +13,47 @@ describe('EnvironmentPanel', () => {
   it('renders a card per frame and an arrow between them', () => {
     const frames: EnvFrame[] = [
       { label: 'empty-env', frames: [[]] },
-      { label: 'extend', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
+      { label: 'extend', frames: [[{ name: 'x', value: '1', type: 'number' }]], parentFrameIndex: 0 },
     ]
     const { container } = render(<EnvironmentPanel frames={frames} />)
     expect(screen.getByText('empty-env')).toBeInTheDocument()
     expect(screen.getByText('extend')).toBeInTheDocument()
     expect(container.querySelector('path[marker-end]')).toBeInTheDocument()
+  })
+
+  it('stacks frames that share a parent in the same column instead of spreading them out chronologically', () => {
+    const frames: EnvFrame[] = [
+      { label: 'empty-env', frames: [[]] },
+      { label: 'extend', frames: [[{ name: 'x', value: '200', type: 'number' }]], parentFrameIndex: 0 },
+      { label: 'extend', frames: [[{ name: 'f', value: '<procedure>', type: 'lambda' }]], parentFrameIndex: 1 },
+      { label: 'extend', frames: [[{ name: 'x', value: '100', type: 'number' }]], parentFrameIndex: 2 },
+      { label: 'extend', frames: [[{ name: 'z', value: '1', type: 'number' }]], parentFrameIndex: 1 },
+    ]
+    const { container } = render(<EnvironmentPanel frames={frames} />)
+    const cards = Array.from(container.querySelectorAll('[data-testid="env-frame"]'))
+    const coordsOf = (el: Element) => {
+      const m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(el.getAttribute('transform') ?? '')
+      return { x: Number(m?.[1]), y: Number(m?.[2]) }
+    }
+
+    // f (índice 2) y z (índice 4) comparten el mismo padre (1): misma columna, distinta fila.
+    expect(coordsOf(cards[2]).x).toBe(coordsOf(cards[4]).x)
+    expect(coordsOf(cards[2]).y).not.toBe(coordsOf(cards[4]).y)
+    // x=100 (índice 3) es hijo de f (2), no de z: una columna más a la derecha que ambos.
+    expect(coordsOf(cards[3]).x).toBeGreaterThan(coordsOf(cards[2]).x)
+
+    // La flecha "extiende" de z va directo a su padre real (1), no al marco anterior (3).
+    const arrow = container.querySelector('[data-testid="extends-arrow"][data-to="4"]')
+    expect(arrow).toBeInTheDocument()
+    expect(arrow).toHaveAttribute('data-from', '1')
+  })
+
+  it('does not draw an extends arrow for a frame with no parentFrameIndex', () => {
+    const frames: EnvFrame[] = [
+      { label: 'empty-env', frames: [[]] },
+    ]
+    const { container } = render(<EnvironmentPanel frames={frames} />)
+    expect(container.querySelector('[data-testid="extends-arrow"]')).not.toBeInTheDocument()
   })
 
   it('draws a target arrow from an assignment frame to the frame it mutated', () => {

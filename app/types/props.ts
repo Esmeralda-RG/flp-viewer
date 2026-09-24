@@ -57,6 +57,12 @@ export interface ArrowProps {
   y1: number
   x2: number
   y2: number
+  color?: string
+  dashed?: boolean
+  markerId?: string
+  testId?: string
+  dataFrom?: number
+  dataTo?: number
 }
 
 export interface EnvHeaderProps {

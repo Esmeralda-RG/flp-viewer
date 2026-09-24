@@ -31,6 +31,13 @@ function toASTNode(v: unknown): ASTNode | null {
 
 // ── Conversión de ambientes ───────────────────────────────────────────────────
 
+// Nombres de datatype que los intérpretes del curso (y los generados por
+// esta app) usan para representar procedimientos/clausuras. Un valor así
+// puede tener como campo un ambiente completo (o un AST completo) — mostrar
+// todos sus campos inline lo vuelve ilegible, así que se muestra compacto
+// igual que un procedure nativo, en vez de expandirlo como cualquier struct.
+const PROCEDURE_LIKE_TYPE = /closure|procval|clausura|cierre|proc-recursivo|procedimiento|procedure|lambda|funcion|function/i
+
 export function valueToString(v: unknown): string {
   if (v === null || v === undefined) return 'null'
   if (typeof v === 'boolean') return String(v)
@@ -43,6 +50,7 @@ export function valueToString(v: unknown): string {
   if (typeof v === 'object') {
     const obj = v as Record<string, unknown>
     if (typeof obj.type === 'string') {
+      if (PROCEDURE_LIKE_TYPE.test(obj.type)) return `<${obj.type}>`
       const fields = Array.isArray(obj.fields) ? obj.fields : []
       if (fields.length === 0) return `<${obj.type}>`
       return `<${obj.type} ${fields.map(valueToString).join(' ')}>`
@@ -64,6 +72,7 @@ function valueType(v: unknown): string {
     const obj = v as Record<string, unknown>
     if (obj.type === 'procedure') return 'lambda'
     if (obj.type === 'void') return 'void'
+    if (typeof obj.type === 'string' && PROCEDURE_LIKE_TYPE.test(obj.type)) return 'lambda'
     return 'struct'
   }
   return 'unknown'
@@ -89,7 +98,8 @@ function toEnvFrames(raw: unknown[]): EnvFrame[] {
       }))
     )
     const targetFrameIndex = typeof s.targetFrame === 'number' ? s.targetFrame : undefined
-    return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames, targetFrameIndex }
+    const parentFrameIndex = typeof s.parentFrame === 'number' ? s.parentFrame : undefined
+    return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames, targetFrameIndex, parentFrameIndex }
   })
 }
 

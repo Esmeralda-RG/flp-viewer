@@ -77,8 +77,8 @@ describe('runTrace', () => {
             output: 42,
             environments: [
               { tag: 'empty-env', frames: [] },
-              { tag: 'init-env', frames: [[{ name: 'x', value: 1 }]] },
-              { tag: 'other', frames: [[{ name: 'y', value: [1, 2] }]] },
+              { tag: 'init-env', frames: [[{ name: 'x', value: 1 }]], parentFrame: 0 },
+              { tag: 'other', frames: [[{ name: 'y', value: [1, 2] }]], parentFrame: 1 },
               { tag: 'assign', frames: [[{ name: 'x', value: 9 }]], targetFrame: 1 },
             ],
           },
@@ -90,8 +90,8 @@ describe('runTrace', () => {
     expect(result.output).toBe('42')
     expect(result.environments).toEqual([
       { label: 'empty-env', kind: 'binding', frames: [] },
-      { label: 'init-env', kind: 'binding', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
-      { label: 'extend', kind: 'binding', frames: [[{ name: 'y', value: '[1, 2]', type: 'list' }]] },
+      { label: 'init-env', kind: 'binding', frames: [[{ name: 'x', value: '1', type: 'number' }]], parentFrameIndex: 0 },
+      { label: 'extend', kind: 'binding', frames: [[{ name: 'y', value: '[1, 2]', type: 'list' }]], parentFrameIndex: 1 },
       { label: 'asignación', kind: 'assignment', frames: [[{ name: 'x', value: '9', type: 'number' }]], targetFrameIndex: 1 },
     ])
   })
@@ -108,6 +108,40 @@ describe('runTrace', () => {
     })
     const result = await runTrace([], 'x')
     expect(result.environments[0].targetFrameIndex).toBeUndefined()
+  })
+
+  it('leaves parentFrameIndex undefined when the snapshot has no parentFrame', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{
+          ast: null, output: null,
+          environments: [{ tag: 'empty-env', frames: [], parentFrame: null }],
+        }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.environments[0].parentFrameIndex).toBeUndefined()
+  })
+
+  it('sets parentFrameIndex when a frame extends a non-adjacent environment', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{
+          ast: null, output: null,
+          environments: [
+            { tag: 'empty-env', frames: [] },
+            { tag: 'extend', frames: [[{ name: 'x', value: 200 }]], parentFrame: 0 },
+            { tag: 'extend', frames: [[{ name: 'f', value: { type: 'procedure' } }]], parentFrame: 1 },
+            { tag: 'extend', frames: [[{ name: 'x', value: 100 }]], parentFrame: 2 },
+            { tag: 'extend', frames: [[{ name: 'z', value: 1 }]], parentFrame: 1 },
+          ],
+        }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.environments.map((e) => e.parentFrameIndex)).toEqual([undefined, 0, 1, 2, 1])
   })
 
   it('handles a null/empty steps array gracefully', async () => {
@@ -188,6 +222,27 @@ describe('runTrace', () => {
       { name: 's', value: '<point 1 2>', type: 'struct' },
       { name: 'flag', value: 'true', type: 'boolean' },
       { name: 'nothing', value: 'null', type: 'unknown' },
+    ])
+  })
+
+  it.each([
+    'closure', 'a-closure', 'procval', 'clausura', 'cierre', 'proc-recursivo', 'procedimiento-recursivo',
+  ])('shows a %s struct compactly, without expanding its fields, and types it as lambda', async (typeName) => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{
+          ast: null, output: null,
+          environments: [{
+            tag: 'extend',
+            frames: [[{ name: 'f', value: { type: typeName, fields: [['x'], { huge: 'ast' }, { huge: 'env' }] } }]],
+          }],
+        }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.environments[0].frames[0]).toEqual([
+      { name: 'f', value: `<${typeName}>`, type: 'lambda' },
     ])
   })
 

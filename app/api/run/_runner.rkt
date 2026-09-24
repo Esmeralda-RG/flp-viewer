@@ -18,14 +18,19 @@
 
 (define (env-snapshot->json snapshot)
   (match snapshot
-    ;; frame-index (solo en 'assign) es la posición del marco cuya celda mutó
-    ;; esta asignación, dentro de este mismo arreglo de ambientes — ver
-    ;; frame-position-of en _tracking.rkt. #f si no aplica o no se pudo ubicar.
-    [(list tag frames frame-index)
+    ;; target-frame (solo en 'assign) es la posición del marco cuya celda mutó
+    ;; esta asignación. parent-frame (en empty-env/init-env/extend) es la
+    ;; posición del ambiente que este marco realmente extiende — el `env` que
+    ;; recibió extend-env, no "el marco anterior en el arreglo": al aplicar
+    ;; un procedimiento el nuevo marco extiende el ambiente de creación de
+    ;; ESE procedimiento, que puede quedar lejos (o repetirse en cada llamada
+    ;; recursiva). Ambos #f/null si no aplica o no se pudo ubicar.
+    [(list tag frames target-frame parent-frame)
      (hasheq 'tag (symbol->string tag)
              'frames (map frame->json frames)
-             'targetFrame (or frame-index (json-null)))]
-    [_ (hasheq 'tag "unknown" 'frames '() 'targetFrame (json-null))]))
+             'targetFrame (or target-frame (json-null))
+             'parentFrame (or parent-frame (json-null)))]
+    [_ (hasheq 'tag "unknown" 'frames '() 'targetFrame (json-null) 'parentFrame (json-null))]))
 
 ; Char-stream compatible con el protocolo interno de sllgen
 (define (make-char-stream str)
