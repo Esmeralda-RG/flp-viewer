@@ -47,7 +47,7 @@ export default function Navbar({
           </svg>
         </button>
         {dropdownOpen && (
-          <div className="absolute top-full left-0 mt-1 w-56 bg-[#2d2d2d] border border-[#3c3c3c] rounded shadow-xl z-50 py-1">
+          <div className="absolute top-full left-0 mt-1 w-56 max-h-[28rem] overflow-y-auto bg-[#2d2d2d] border border-[#3c3c3c] rounded shadow-xl z-50 py-1">
             {examples.map((ex) => (
               <button
                 key={ex.id}
