@@ -7,7 +7,7 @@ export default function GrammarPreview({ content, onStubFill }: Readonly<Grammar
   const lines = content.split('\n')
 
   return (
-    <div className="h-full overflow-auto p-3 font-mono text-xs leading-relaxed">
+    <div className="h-full overflow-auto p-3 font-mono text-xs leading-relaxed" data-testid="grammar-preview">
       {lines.map((line, i) => {
         const m = new RegExp(STUB_RE).exec(line)
         if (m) {

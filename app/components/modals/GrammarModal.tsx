@@ -70,7 +70,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
     statusMessage = (
       <div className="flex items-center gap-1.5 text-xs text-amber-400 font-mono flex-1 min-w-0">
         <span className="shrink-0">⚠</span>
-        <span className="truncate">{errors[0]}</span>
+        <span className="truncate" data-testid="grammar-error">{errors[0]}</span>
       </div>
     )
   } else if (canGenerate) {
@@ -99,7 +99,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
         aria-label="Close modal"
       />
 
-      <div className="relative z-10 flex flex-col w-[92vw] h-[84vh] max-w-7xl bg-[#1e1e1e] border border-[#3c3c3c] rounded-lg shadow-2xl overflow-hidden">
+      <div data-testid="grammar-modal" className="relative z-10 flex flex-col w-[92vw] h-[84vh] max-w-7xl bg-[#1e1e1e] border border-[#3c3c3c] rounded-lg shadow-2xl overflow-hidden">
 
         <div className="flex items-center gap-3 px-4 py-2.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
           <span className="text-sm font-semibold text-zinc-200">Generador BNF → EOPL/SLLGEN</span>
@@ -123,7 +123,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
                 <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">Especificación Léxica</span>
                 <span className="text-[10px] text-zinc-400 ml-auto">un token por línea</span>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0" data-testid="lex-editor">
                 <MonacoEditor
                   height="100%"
                   language="plaintext"
@@ -142,7 +142,7 @@ export default function GrammarModal({ onClose, onGenerate }: Readonly<GrammarMo
                   &lt;nt&gt; ::= items | alt &nbsp;·&nbsp; =&gt; nombre
                 </span>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0" data-testid="grammar-editor">
                 <MonacoEditor
                   height="100%"
                   language="plaintext"

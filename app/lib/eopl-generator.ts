@@ -23,7 +23,11 @@ const LEX_KEYWORDS: Record<string, string[]> = {
     '(float ("-" digit (arbno digit) "." digit (arbno digit)) number)',
   ],
   identifier: [
-    '(identifier (letter (arbno (or letter digit "?" "$"))) symbol)',
+    // $ es un carácter de símbolo normal en Racket/EOPL (sin restricción de
+    // posición); solo exigíamos letra al inicio por elección propia. Se
+    // permite también $ como primer carácter — ver conversación con el
+    // profesor del curso.
+    '(identifier ((or letter "$") (arbno (or letter digit "?" "$"))) symbol)',
   ],
   binary: [
     '(binary ("b" (or "0" "1") (arbno (or "0" "1"))) string)',

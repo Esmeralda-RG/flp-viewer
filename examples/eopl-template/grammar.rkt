@@ -8,7 +8,7 @@
   (comment
    ("%" (arbno (not #\newline))) skip)
   (identifier
-   (letter (arbno (or letter digit "?" "$"))) symbol)
+   ((or letter "$") (arbno (or letter digit "?" "$"))) symbol)
   (binary
    ("b" (or "0" "1") (arbno (or "0" "1"))) string)
   (binary

@@ -127,7 +127,7 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
   L('')
   L('(sllgen:make-define-datatypes lexical-spec grammar)')
   L('')
-  // Único hueco sin bloquear fuera de los TODO de cada caso: sin él no hay
+  // Único hueco sin bloquear fuera de los POR HACER de cada caso: sin él no hay
   // dónde declarar un define-datatype auxiliar (p. ej. una clausura) antes
   // de eval-expression, que es donde EOPL exige que aparezca ese `cases` lo vea.
   U(';; Define aquí tipos o funciones auxiliares que necesites (p. ej. una clausura')
@@ -171,7 +171,8 @@ export function generateMainRkt(ast: GrammarAST): MainGeneratorResult {
         L(`        (eval-expression ${bodyField} (init-env)))`)
       } else {
         U(`        ;; TODO: implementar ${variant}`)
-        U(`        (eopl:error "TODO: implementar ${variant}"))`)
+        U(`        (eopl:error "TODO: implementar ${variant}")`)
+        L(`      )`)
       }
     }
 

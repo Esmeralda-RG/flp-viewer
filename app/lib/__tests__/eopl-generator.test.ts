@@ -105,6 +105,12 @@ describe('generateGrammarRkt', () => {
     expect(out).toContain('(or letter digit "?" "$")')
   })
 
+  it('allows "$" as the first character of the default identifier token', () => {
+    const ast = parseStr('<expr> ::= <identifier>')
+    const out = generateGrammarRkt(ast, '')
+    expect(out).toContain('(identifier ((or letter "$") (arbno (or letter digit "?" "$"))) symbol)')
+  })
+
   it('generates a text/string token whose pattern consumes the closing quote', () => {
     const ast = parseStr('<expr> ::= <text>')
     const out = generateGrammarRkt(ast, 'text')
