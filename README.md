@@ -31,7 +31,7 @@ En el área léxica se escribe un nombre de token por línea. El generador recon
 |---|---|
 | `number` | Enteros positivos y negativos |
 | `float` | Números decimales positivos y negativos |
-| `identifier` | Identificadores alfanuméricos (letra seguida de letras, dígitos, `?` o `$`) |
+| `identifier` | Identificadores alfanuméricos (letra o `$`, seguido de letras, dígitos, `?` o `$`) |
 | `binary` | Literales binarios con prefijo `b` |
 | `octal` | Literales octales con prefijo `0x` |
 | `hex` | Literales hexadecimales con prefijo `hx` |
