@@ -88,7 +88,8 @@ function toEnvFrames(raw: unknown[]): EnvFrame[] {
         name, value: valueToString(value), type: valueType(value),
       }))
     )
-    return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames }
+    const targetFrameIndex = typeof s.targetFrame === 'number' ? s.targetFrame : undefined
+    return { label: frameLabel(s.tag), kind: frameKind(s.tag), frames, targetFrameIndex }
   })
 }
 

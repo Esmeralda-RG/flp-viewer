@@ -21,6 +21,29 @@ describe('EnvironmentPanel', () => {
     expect(container.querySelector('path[marker-end]')).toBeInTheDocument()
   })
 
+  it('draws a target arrow from an assignment frame to the frame it mutated', () => {
+    const frames: EnvFrame[] = [
+      { label: 'empty-env', frames: [[]] },
+      { label: 'extend', kind: 'binding', frames: [[{ name: 'x', value: '5', type: 'number' }]] },
+      { label: 'extend', kind: 'binding', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
+      { label: 'asignación', kind: 'assignment', frames: [[{ name: 'x', value: '9', type: 'number' }]], targetFrameIndex: 2 },
+    ]
+    const { container } = render(<EnvironmentPanel frames={frames} />)
+    const arrow = container.querySelector('[data-testid="assign-target-arrow"]')
+    expect(arrow).toBeInTheDocument()
+    expect(arrow).toHaveAttribute('data-from', '3')
+    expect(arrow).toHaveAttribute('data-to', '2')
+  })
+
+  it('does not draw a target arrow for plain binding frames', () => {
+    const frames: EnvFrame[] = [
+      { label: 'empty-env', frames: [[]] },
+      { label: 'extend', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
+    ]
+    const { container } = render(<EnvironmentPanel frames={frames} />)
+    expect(container.querySelector('[data-testid="assign-target-arrow"]')).not.toBeInTheDocument()
+  })
+
   it('shows the snapshot count and calls onReset', async () => {
     const frames: EnvFrame[] = [{ label: 'empty-env', frames: [[]] }]
     render(<EnvironmentPanel frames={frames} />)

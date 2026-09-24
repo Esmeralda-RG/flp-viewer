@@ -18,8 +18,14 @@ export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<Env
     h: cardHeight(frame),
   }))
 
+  const maxCardH = frames.length > 0 ? Math.max(...positions.map(p => p.h)) : 0
+  const hasTargetArrows = frames.some((f) => f.targetFrameIndex !== undefined)
   const svgW = frames.length > 0 ? positions.at(-1)!.x + CARD_W + 40 : 0
-  const svgH = frames.length > 0 ? Math.max(...positions.map(p => p.h)) + 40 : 0
+  let svgH = 0
+  if (frames.length > 0) {
+    svgH = maxCardH + 40
+    if (hasTargetArrows) svgH += 50
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -47,6 +53,9 @@ export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<Env
                 <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
                   <path d="M0,0 L0,6 L8,3 z" fill="#4b5563" />
                 </marker>
+                <marker id="arrowhead-target" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" />
+                </marker>
               </defs>
 
               {positions.slice(0, -1).map((pos, i) => {
@@ -56,6 +65,27 @@ export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<Env
                     key={`${pos.x}-${pos.y}-${next.x}-${next.y}`}
                     x1={pos.x + CARD_W + 3} y1={pos.y + pos.h / 2}
                     x2={next.x - 3}         y2={next.y + next.h / 2}
+                  />
+                )
+              })}
+
+              {frames.map((frame, i) => {
+                if (frame.targetFrameIndex === undefined) return null
+                const from = positions[i]
+                const to = positions[frame.targetFrameIndex]
+                if (!to) return null
+                const x1 = from.x + CARD_W / 2
+                const x2 = to.x + CARD_W / 2
+                const peakY = maxCardH + 36
+                return (
+                  <path
+                    key={`target-${from.x}-${from.h}-${to.x}-${to.h}`}
+                    data-testid="assign-target-arrow"
+                    data-from={i}
+                    data-to={frame.targetFrameIndex}
+                    d={`M${x1},${from.h} C${x1},${peakY} ${x2},${peakY} ${x2},${to.h + 3}`}
+                    fill="none" stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="4 3"
+                    markerEnd="url(#arrowhead-target)"
                   />
                 )
               })}

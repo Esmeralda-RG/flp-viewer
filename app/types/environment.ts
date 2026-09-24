@@ -10,6 +10,7 @@ export interface EnvFrame {
   label: string
   kind?: FrameKind
   frames: Binding[][]
+  targetFrameIndex?: number
 }
 
 export interface Transform {

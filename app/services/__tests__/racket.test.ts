@@ -79,7 +79,7 @@ describe('runTrace', () => {
               { tag: 'empty-env', frames: [] },
               { tag: 'init-env', frames: [[{ name: 'x', value: 1 }]] },
               { tag: 'other', frames: [[{ name: 'y', value: [1, 2] }]] },
-              { tag: 'assign', frames: [[{ name: 'x', value: 9 }]] },
+              { tag: 'assign', frames: [[{ name: 'x', value: 9 }]], targetFrame: 1 },
             ],
           },
         ],
@@ -92,8 +92,22 @@ describe('runTrace', () => {
       { label: 'empty-env', kind: 'binding', frames: [] },
       { label: 'init-env', kind: 'binding', frames: [[{ name: 'x', value: '1', type: 'number' }]] },
       { label: 'extend', kind: 'binding', frames: [[{ name: 'y', value: '[1, 2]', type: 'list' }]] },
-      { label: 'asignación', kind: 'assignment', frames: [[{ name: 'x', value: '9', type: 'number' }]] },
+      { label: 'asignación', kind: 'assignment', frames: [[{ name: 'x', value: '9', type: 'number' }]], targetFrameIndex: 1 },
     ])
+  })
+
+  it('leaves targetFrameIndex undefined when the snapshot has no targetFrame', async () => {
+    mockFetchOnce({
+      jsonBody: {
+        stdout: '', stderr: '', error: null,
+        steps: [{
+          ast: null, output: null,
+          environments: [{ tag: 'extend', frames: [[{ name: 'x', value: 1 }]], targetFrame: null }],
+        }],
+      },
+    })
+    const result = await runTrace([], 'x')
+    expect(result.environments[0].targetFrameIndex).toBeUndefined()
   })
 
   it('handles a null/empty steps array gracefully', async () => {

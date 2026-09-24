@@ -18,10 +18,14 @@
 
 (define (env-snapshot->json snapshot)
   (match snapshot
-    [(list tag frames)
+    ;; frame-index (solo en 'assign) es la posición del marco cuya celda mutó
+    ;; esta asignación, dentro de este mismo arreglo de ambientes — ver
+    ;; frame-position-of en _tracking.rkt. #f si no aplica o no se pudo ubicar.
+    [(list tag frames frame-index)
      (hasheq 'tag (symbol->string tag)
-             'frames (map frame->json frames))]
-    [_ (hasheq 'tag "unknown" 'frames '())]))
+             'frames (map frame->json frames)
+             'targetFrame (or frame-index (json-null)))]
+    [_ (hasheq 'tag "unknown" 'frames '() 'targetFrame (json-null))]))
 
 ; Char-stream compatible con el protocolo interno de sllgen
 (define (make-char-stream str)
