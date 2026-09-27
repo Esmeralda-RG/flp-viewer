@@ -21,9 +21,12 @@ describe('runPipeline', () => {
     expect(result.mainLockedLines).toEqual([])
   })
 
-  it('processes a valid grammar without errors', () => {
-    const bnf = '<program> ::= <expression>\n<expression> ::= <number>'
-    const result = runPipeline('', bnf)
+  it.each([
+    { name: 'a valid grammar', lexInput: '', bnf: '<program> ::= <expression>\n<expression> ::= <number>' },
+    { name: 'known lex keywords', lexInput: 'number\nidentifier', bnf: '<program> ::= <expression>\n<expression> ::= <number>' },
+    { name: '<expr> as a synonym for <expression>', lexInput: '', bnf: '<program> ::= <expr>\n<expr> ::= <number>' },
+  ])('processes $name without errors', ({ lexInput, bnf }) => {
+    const result = runPipeline(lexInput, bnf)
     expect(result.errors).toEqual([])
   })
 
@@ -39,12 +42,6 @@ describe('runPipeline', () => {
     const bnf = '<program> ::= <expression>\n<expression> ::= <number>'
     const result = runPipeline('unknown-lextoken', bnf)
     expect(result.errors.some(e => e.includes('unknown-lextoken'))).toBe(true)
-  })
-
-  it('does not report errors for known lex keywords', () => {
-    const bnf = '<program> ::= <expression>\n<expression> ::= <number>'
-    const result = runPipeline('number\nidentifier', bnf)
-    expect(result.errors).toEqual([])
   })
 
   it('catches lexer errors and returns them as error strings', () => {
@@ -84,11 +81,5 @@ describe('runPipeline', () => {
     const result = runPipeline('', bnf)
     expect(result.errors.some(e => e.includes('<expression>') || e.includes('<expr>'))).toBe(true)
     expect(result.grammarRkt).toBe('')
-  })
-
-  it('accepts <expr> as a synonym for <expression>', () => {
-    const bnf = '<program> ::= <expr>\n<expr> ::= <number>'
-    const result = runPipeline('', bnf)
-    expect(result.errors).toEqual([])
   })
 })

@@ -38,28 +38,27 @@ function toASTNode(v: unknown): ASTNode | null {
 // igual que un procedure nativo, en vez de expandirlo como cualquier struct.
 const PROCEDURE_LIKE_TYPE = /closure|procval|clausura|cierre|proc-recursivo|procedimiento|procedure|lambda|funcion|function/i
 
+function arrayValueToString(v: unknown[]): string {
+  if (v.length === 0) return '[]'
+  return `[${v.map(valueToString).join(', ')}]`
+}
+
+function structValueToString(obj: Record<string, unknown>): string {
+  if (typeof obj.type !== 'string') return JSON.stringify(obj)
+  if (PROCEDURE_LIKE_TYPE.test(obj.type)) return `<${obj.type}>`
+  const fields = Array.isArray(obj.fields) ? obj.fields : []
+  if (fields.length === 0) return `<${obj.type}>`
+  return `<${obj.type} ${fields.map(valueToString).join(' ')}>`
+}
+
 export function valueToString(v: unknown): string {
   if (v === null || v === undefined) return 'null'
   if (typeof v === 'boolean') return String(v)
   if (typeof v === 'number') return String(v)
   if (typeof v === 'string') return `"${v}"`
-  if (Array.isArray(v)) {
-    if (v.length === 0) return '[]'
-    return `[${v.map(valueToString).join(', ')}]`
-  }
-  if (typeof v === 'object') {
-    const obj = v as Record<string, unknown>
-    if (typeof obj.type === 'string') {
-      if (PROCEDURE_LIKE_TYPE.test(obj.type)) return `<${obj.type}>`
-      const fields = Array.isArray(obj.fields) ? obj.fields : []
-      if (fields.length === 0) return `<${obj.type}>`
-      return `<${obj.type} ${fields.map(valueToString).join(' ')}>`
-    }
-    return JSON.stringify(v)
-  }
-  if (typeof v === 'symbol' || typeof v === 'bigint' || typeof v === 'function') {
-    return v.toString()
-  }
+  if (Array.isArray(v)) return arrayValueToString(v)
+  if (typeof v === 'object') return structValueToString(v as Record<string, unknown>)
+  if (typeof v === 'symbol' || typeof v === 'bigint' || typeof v === 'function') return v.toString()
   return 'unknown'
 }
 
