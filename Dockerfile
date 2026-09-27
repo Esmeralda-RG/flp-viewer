@@ -30,7 +30,10 @@ ENV HOSTNAME=0.0.0.0
 COPY --chown=app:app --from=builder /app/.next/standalone ./
 COPY --chown=app:app --from=builder /app/.next/static ./.next/static
 COPY --chown=app:app --from=builder /app/app/api/run/_runner.rkt \
+                    /app/app/api/run/_json-value.rkt \
                     /app/app/api/run/_tracking.rkt \
+                    /app/app/api/run/_tracking-assign.rkt \
+                    /app/app/api/run/_tracking-init-env.rkt \
                     /app/app/api/run/_stream-parser.rkt \
                     ./app/api/run/
 
