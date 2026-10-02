@@ -15,7 +15,7 @@ Agrega procedimientos de primera clase al intérprete de condicionales y `let`. 
 ## Alcance estático
 
 ```
-let x = 10 in let f = proc(y) +(x, y) in let x = 20 in (f 5)   // → 15
+let x = 10 in let f = proc(y) +(x, y) in let x = 20 in (f 5)   % → 15
 ```
 
 `f` resuelve `x` donde fue creada (`x = 10`), no en la `x = 20` que está a la vista cuando se llama. Con alcance dinámico habría dado `25`.
@@ -24,7 +24,7 @@ let x = 10 in let f = proc(y) +(x, y) in let x = 20 in (f 5)   // → 15
 
 ```
 let sumar = proc(x) proc(y) +(x, y) in
-  let sumar3 = (sumar 3) in (sumar3 4)   // → 7
+  let sumar3 = (sumar 3) in (sumar3 4)   % → 7
 ```
 
 `sumar3` sigue recordando `x = 3` aunque ese marco ya no esté en la cadena visible del `let`; eso es lo que hace un cierre.
@@ -33,7 +33,7 @@ let sumar = proc(x) proc(y) +(x, y) in
 
 ```
 let f = proc(x, y) +(x, y) in (f 1)
-// → error: se esperaban 2 argumentos y llegó 1
+% → error: se esperaban 2 argumentos y llegó 1
 ```
 
 ## Qué observar

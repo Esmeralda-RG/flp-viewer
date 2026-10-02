@@ -15,7 +15,7 @@ Sigue el modelo IMPLICIT-REFS de EOPL: el ambiente liga cada identificador con u
 ## Ligadura frente a asignación
 
 ```
-let x = 1 in begin let x = 10 in x ; set x = 7 ; x end   // → 7
+let x = 1 in begin let x = 10 in x ; set x = 7 ; x end   % → 7
 ```
 
 El `let` interno abre un marco con su propia `x`; el `set` de después escribe en la `x` externa (la visible al terminar ese `let`), no en la que ya desapareció.
@@ -25,7 +25,7 @@ El `let` interno abre un marco con su propia `x`; el `set` de después escribe e
 ```
 let x = 100 in
   let p = proc(a) begin set x = add1(x); a end
-  in +((p x), (p x))   // → 201
+  in +((p x), (p x))   % → 201
 ```
 
 `p` captura la **celda** de `x`, no su valor: la segunda llamada ve el `set` que dejó la primera (100 + 101).
@@ -35,7 +35,7 @@ let x = 100 in
 ```
 let c = 0 in
   let inc = proc() begin set c = add1(c) ; c end
-  in begin (inc) ; (inc) ; (inc) end   // → 3
+  in begin (inc) ; (inc) ; (inc) end   % → 3
 ```
 
 ## Qué observar

@@ -19,7 +19,7 @@ Define los **tokens** que el scanner reconoce. Así está en el ejemplo:
 ```racket
 (define lexical-spec
   '((whitespace (whitespace) skip)
-    (comment ("//" (arbno (not #\newline))) skip)
+    (comment ("%" (arbno (not #\newline))) skip)
     (identifier (letter (arbno (or letter digit "?"))) symbol)
     (number (digit (arbno digit)) number)))
 ```
@@ -30,7 +30,7 @@ Define los **tokens** que el scanner reconoce. Así está en el ejemplo:
 | Patrón | Expresión regular en notación SLLGEN. |
 | Tipo | `number`, `symbol`, `string` o `skip` (se descarta). |
 
-Por eso los espacios y los comentarios `//` se ignoran: están marcados como `skip`.
+Por eso los espacios y los comentarios `%` se ignoran: están marcados como `skip`.
 
 ## La gramática
 

@@ -16,7 +16,7 @@ Con `let` y `proc` no se puede escribir un procedimiento recursivo: cuando se cr
 
 ```
 let fact = proc(n) if ==(n,0) then 1 else *(n, (fact sub1(n))) in (fact 3)
-// → error: fact no se encuentra
+% → error: fact no se encuentra
 ```
 
 La clausura capturó el ambiente **anterior** al `let`, donde `fact` todavía no existe.
@@ -24,7 +24,7 @@ La clausura capturó el ambiente **anterior** al `let`, donde `fact` todavía no
 ## Recursión
 
 ```
-letrec fact(n) = if ==(n,0) then 1 else *(n, (fact sub1(n))) in (fact 5)   // → 120
+letrec fact(n) = if ==(n,0) then 1 else *(n, (fact sub1(n))) in (fact 5)   % → 120
 ```
 
 Cada llamada abre un marco nuevo (`{n: 5}`, `{n: 4}`, …) que extiende **el mismo marco** del `letrec`, no la llamada anterior.
@@ -34,7 +34,7 @@ Cada llamada abre un marco nuevo (`{n: 5}`, `{n: 4}`, …) que extiende **el mis
 ```
 letrec par?(n)   = if ==(n,0) then true  else (impar? sub1(n))
        impar?(n) = if ==(n,0) then false else (par? sub1(n))
-in (impar? 7)   // → true
+in (impar? 7)   % → true
 ```
 
 Un solo marco `{par?: <proc-recursivo>, impar?: <proc-recursivo>}` ata a ambos procedimientos entre sí.

@@ -17,7 +17,7 @@ El intérprete del tema 4 (Corte 1) agrega booleanos, las comparaciones `>`, `>=
 Las expresiones a la derecha de un `let` con varias ligaduras se evalúan **todas en el ambiente de afuera**, y solo después se crea un único marco con todas ellas:
 
 ```
-let x = 10 y = +(x,1) in +(x,y)   // → 15, no 21
+let x = 10 y = +(x,1) in +(x,y)   % → 15, no 21
 ```
 
 `+(x,1)` usa la `x` del ambiente inicial (`x = 4`), no la `x = 10` del mismo `let`.
@@ -28,14 +28,14 @@ La condición debe ser booleana, y el marco de un `let` que está en la rama des
 
 ```
 let a = 8 in let k = if >(a,10) then let j = 9 in +(j,8) else 4 in +(k,8)
-// → 12; el marco {j: 9} no aparece porque >(8,10) es falso
+% → 12; el marco {j: 9} no aparece porque >(8,10) es falso
 ```
 
 ## Errores típicos
 
 ```
-let p = 3 q = p in q       // → error: p no existe cuando se evalúa q
-if +(x,1) then 1 else 0    // → error: el test-exp debe ser booleano
+let p = 3 q = p in q       % → error: p no existe cuando se evalúa q
+if +(x,1) then 1 else 0    % → error: el test-exp debe ser booleano
 ```
 
 ## Qué observar

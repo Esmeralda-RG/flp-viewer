@@ -17,11 +17,11 @@ Sigue la sección 4.3 de EOPL sobre el intérprete de asignación. Cada celda de
 ```
 let a = 10 b = 20 in
   let swap = proc(x, y) let t = x in begin set x = y; set y = t end
-  in begin (swap a b); [a, b] end       // → [20, 10]  (x, y son alias de a, b)
+  in begin (swap a b); [a, b] end       % → [20, 10]  (x, y son alias de a, b)
 
 let a = 10 b = 20 in
   let swap = proc(x, y) let t = x in begin set x = y; set y = t end
-  in begin (swap +(a,0) +(b,0)); [a, b] end   // → [10, 20]  (copias: swap no toca a, b)
+  in begin (swap +(a,0) +(b,0)); [a, b] end   % → [10, 20]  (copias: swap no toca a, b)
 ```
 
 La única diferencia entre los dos programas es si el operando es la variable misma o una expresión sobre ella.
@@ -31,7 +31,7 @@ La única diferencia entre los dos programas es si el operando es la variable mi
 ```
 let a = 3 in
   let p = proc(u, w) begin set u = 10; set w = +(w, 1); [u, w, a] end
-  in (p a a)   // → [11, 11, 11]
+  in (p a a)   % → [11, 11, 11]
 ```
 
 `u`, `w` y `a` terminan siendo la misma celda: por eso `w` ya vale `10` cuando se le suma `1`.

@@ -53,7 +53,7 @@ Este es exactamente el lenguaje que define el ejemplo cargado:
 Con él puedes evaluar, por ejemplo:
 
 ```
-let x = 5 in -(x, 3)        // → 2
+let x = 5 in -(x, 3)        % → 2
 ```
 
 ## El nombre tras `=>`

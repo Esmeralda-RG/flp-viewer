@@ -15,7 +15,7 @@ Un **cierre** es un procedimiento que "recuerda" el ambiente en el que fue cread
 ## Crear y llamar un procedimiento
 
 ```
-let f = proc (x) -(x, 1) in (f 5)     // → 4
+let f = proc (x) -(x, 1) in (f 5)     % → 4
 ```
 
 - `proc (x) -(x, 1)` crea un procedimiento de un parámetro.
@@ -48,7 +48,7 @@ La llamada simplemente evalúa el operador y el argumento, y aplica el procedimi
 ```
 let x = 10 in
   let f = proc (y) -(x, y) in
-    (f 3)                            // → 7
+    (f 3)                            % → 7
 ```
 
 Cuando se crea `f`, captura el ambiente donde `x = 10`. Al llamar `(f 3)`, evalúa `-(x, y)` con `y = 3` y el `x = 10` que recordaba. Sin cierres, `x` no estaría disponible en ese momento.

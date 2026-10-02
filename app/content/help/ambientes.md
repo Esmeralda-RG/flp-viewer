@@ -33,8 +33,8 @@ En este ejemplo, `init-env` ya define tres variables:
 Por eso puedes evaluar directamente, sin declarar nada:
 
 ```
-x          // → 1
--(z, x)    // → 2
+x          % → 1
+-(z, x)    % → 2
 ```
 
 ## Cómo busca `apply-env`
@@ -52,10 +52,10 @@ Aquí `x` se encuentra en el frame nuevo (`x = 10`), pero `y` no está ahí: la 
 Cuando una ligadura interna usa un nombre que ya existía, **opaca** a la externa mientras dure su alcance:
 
 ```
-x                       // → 1  (viene de init-env)
-let x = 99 in x         // → 99 (el let opaca a x)
+x                       % → 1  (viene de init-env)
+let x = 99 in x         % → 99 (el let opaca a x)
 let x = 10 in
-  let x = 20 in x       // → 20 (gana el más interno)
+  let x = 20 in x       % → 20 (gana el más interno)
 ```
 
 No se borra nada: al salir del `let`, el frame desaparece y `x` vuelve a valer 1.

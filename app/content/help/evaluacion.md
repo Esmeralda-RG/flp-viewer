@@ -61,9 +61,9 @@ Dónde difieren:
 ## Pruébalo
 
 ```
-zero?(0)                         // → #t
-if zero?(0) then 42 else 99      // → 42
-let x = 10 in let y = 3 in -(x, y)  // → 7
+zero?(0)                         % → #t
+if zero?(0) then 42 else 99      % → 42
+let x = 10 in let y = 3 in -(x, y)  % → 7
 ```
 
 Observa en el panel **AST** cómo cada expresión corresponde a la estructura de nodos, y en **Ambiente** cómo los `let` anidados apilan un frame por cada ligadura.

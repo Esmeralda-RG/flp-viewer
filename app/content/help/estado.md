@@ -18,8 +18,8 @@ Una **ligadura** crea una asociación nombre → celda *nueva* en el ambiente. L
 
 ```
 let x = 5 in
-  let x = 10 in   // nueva ligadura, opaca a la anterior
-    x             // → 10
+  let x = 10 in   % nueva ligadura, opaca a la anterior
+    x             % → 10
 ```
 
 ## Asignación (assignment)
@@ -29,8 +29,8 @@ Una **asignación** (`set`) **no** crea una variable nueva: escribe sobre la **c
 ```
 let x = 5 in
   begin
-    set x = 10 ;   // modifica la celda de x
-    x              // → 10
+    set x = 10 ;   % modifica la celda de x
+    x              % → 10
   end
 ```
 
@@ -45,7 +45,7 @@ let x = 0 in
   begin
     set x = 5 ;
     set x = -(x, 2) ;
-    x                  // → 3
+    x                  % → 3
   end
 ```
 

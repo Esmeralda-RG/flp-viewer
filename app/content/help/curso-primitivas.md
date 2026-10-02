@@ -25,9 +25,9 @@ Como no hay `let`, cada programa evalúa sobre este mismo marco; lo que cambia d
 ## Pruébalo
 
 ```
-+(a, *(b, sub1(c)))   // → 29, anidamiento de primitivas y variables
--(c, a, b)            // → -3, resta n-aria del curso: -(c,a,b) = c - (a + b)
-+(x, w)               // → error: w no está en init-env
++(a, *(b, sub1(c)))   % → 29, anidamiento de primitivas y variables
+-(c, a, b)            % → -3, resta n-aria del curso: -(c,a,b) = c - (a + b)
++(x, w)               % → error: w no está en init-env
 ```
 
 ## Qué observar
