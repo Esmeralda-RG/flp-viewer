@@ -109,7 +109,7 @@ export default function CodeEditor({
 
       if (changesTouchLockedLines(event.changes, lockedLineSet)) {
         reverting = true
-        model.undo()
+        void model.undo()
         reverting = false
         // El onChange nativo de Monaco ya disparó con el contenido sin deshacer
         // (se registra antes que este listener) — resincroniza React con el

@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { Example, ExampleFile, Meta} from '@/app/types/examples'
 
-export async function loadExamples(): Promise<Example[]> {
+export function loadExamples(): Example[] {
   const examplesDir = path.join(process.cwd(), 'examples')
 
   let entries: string[]

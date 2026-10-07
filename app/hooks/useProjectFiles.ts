@@ -71,7 +71,7 @@ export function useProjectFiles(examples: Example[]) {
   }, [])
 
   const download = useCallback(() => {
-    downloadZip(files)
+    void downloadZip(files)
   }, [files])
 
   return {

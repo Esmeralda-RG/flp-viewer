@@ -27,7 +27,7 @@ export default function PlaygroundLayout({ examples, helpSections, glossaryTerms
   const [helpOpen, setHelpOpen] = useState(false)
 
   const handleRun = () => {
-    session.run(projectFiles.files.map((f) => ({ name: f.name, content: f.content })))
+    void session.run(projectFiles.files.map((f) => ({ name: f.name, content: f.content })))
   }
 
   const handleExampleSelect = (example: Example) => {
