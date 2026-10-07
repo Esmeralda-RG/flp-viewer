@@ -88,7 +88,7 @@ export default function Navbar({
 
       <button
         onClick={onStepModeToggle}
-        title="Paso a paso"
+        title="Ejecuta la expresión evaluación por evaluación y muestra cómo cambia el ambiente"
         className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded transition-colors ${
           stepMode
             ? 'bg-blue-600/30 border border-blue-500/50 text-blue-300'
@@ -119,6 +119,7 @@ export default function Navbar({
 
       <button
         onClick={onClear}
+        title="Limpia la consola, el AST y el ambiente"
         className="text-xs px-3 py-1 rounded border border-[#555] text-zinc-400 hover:text-zinc-200 hover:border-zinc-400 transition-colors"
       >
         Limpiar

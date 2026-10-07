@@ -98,6 +98,9 @@ export default function WelcomeModal() {
           <p className="text-center text-[10px] text-zinc-400 mt-2.5">
             El ejemplo <span className="text-zinc-300">Hola Mundo</span> ya está cargado y listo para usar
           </p>
+          <p className="text-center text-[10px] text-zinc-400 mt-1">
+            Para explorar más, abre <span className="text-zinc-300">Ayuda</span> en la barra superior
+          </p>
         </div>
       </div>
     </div>
