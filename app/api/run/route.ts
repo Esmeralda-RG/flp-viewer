@@ -1,11 +1,11 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { readFileSync } from 'node:fs'
-import { writeFile, mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { writeFile, rm } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import type { EditorFileLike } from '@/app/types/racket'
 import { withRunSlot } from '@/app/lib/run-queue'
+import { cacheKey, createBuildDir, seenBefore, getCachedDir, storeBuildDir } from '@/app/lib/run-cache'
 
 const execFileAsync = promisify(execFile)
 
@@ -75,23 +75,31 @@ export async function POST(request: Request) {
       return Response.json({ stdout: '', stderr: `Nombre de archivo inválido: ${invalidFile.name}`, error: 'Invalid file name' })
     }
 
-    tmpDir = await mkdtemp(join(tmpdir(), 'flp-'))
+    const injected = files.map((f) => ({ name: f.name, content: injectRuntime(f.name, f.content) }))
+    const key = cacheKey(injected, [RUNNER_RKT, JSON_VALUE_RKT])
+    // `-y` compila a disco (compiled/*.zo) mientras ejecuta, en un solo proceso.
+    const run = (dir: string, compile = false) =>
+      execFileAsync(RACKET_BIN, [...(compile ? ['-y'] : []), join(dir, '_runner.rkt'), testInput], {
+        timeout: 15_000,
+        signal: request.signal,
+        env: { ...process.env, PLTDISABLE_BROWSER_REDIRECT: '1' },
+      })
 
-    await Promise.all(files.map((f) => writeFile(join(tmpDir!, f.name), injectRuntime(f.name, f.content), 'utf8')))
-    await writeFile(join(tmpDir, '_runner.rkt'), RUNNER_RKT, 'utf8')
-    await writeFile(join(tmpDir, '_json-value.rkt'), JSON_VALUE_RKT, 'utf8')
+    const { stdout, stderr } = await withRunSlot(request.signal, async () => {
+      const cached = await getCachedDir(key)
+      if (cached) return run(cached)
 
-    const { stdout, stderr } = await withRunSlot(request.signal, () =>
-      execFileAsync(
-        RACKET_BIN,
-        [join(tmpDir!, '_runner.rkt'), testInput],
-        {
-          timeout: 15_000,
-          signal: request.signal,
-          env: { ...process.env, PLTDISABLE_BROWSER_REDIRECT: '1' },
-        },
-      ),
-    )
+      const repeated = seenBefore(key)
+      tmpDir = await createBuildDir()
+      const buildDir = tmpDir
+      await Promise.all(injected.map((f) => writeFile(join(buildDir, f.name), f.content, 'utf8')))
+      await writeFile(join(buildDir, '_runner.rkt'), RUNNER_RKT, 'utf8')
+      await writeFile(join(buildDir, '_json-value.rkt'), JSON_VALUE_RKT, 'utf8')
+
+      const result = await run(buildDir, repeated)
+      if (repeated && (await storeBuildDir(key, buildDir))) tmpDir = null
+      return result
+    })
 
     let steps: unknown[] | null = null
     try {

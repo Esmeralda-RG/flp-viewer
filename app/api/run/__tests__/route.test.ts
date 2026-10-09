@@ -13,6 +13,11 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   return { ...actual, writeFile: wrapped, default: { ...actual, writeFile: wrapped } }
 })
 
+vi.mock('@/app/lib/run-cache', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/app/lib/run-cache')>()
+  return { ...actual, getCachedDir: vi.fn().mockResolvedValue(null), storeBuildDir: vi.fn().mockResolvedValue(null) }
+})
+
 import { execFile } from 'node:child_process'
 import { POST } from '../route'
 
