@@ -41,7 +41,25 @@ export interface ConsoleOutputProps {
   onNextStep: () => void
 }
 
-export interface EnvironmentPanelProps {
+export interface ExpandControls {
+  expanded?: boolean
+  onToggleExpand?: () => void
+}
+
+export type ExpandedPanel = 'ast' | 'env' | null
+
+export interface ExpandablePanelProps {
+  expanded: boolean
+  onCollapse: () => void
+  children: React.ReactNode
+}
+
+export interface ExpandButtonProps {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export interface EnvironmentPanelProps extends ExpandControls {
   frames: EnvFrame[]
   onEditInitEnv?: () => void
 }
@@ -65,13 +83,13 @@ export interface ArrowProps {
   dataTo?: number
 }
 
-export interface EnvHeaderProps {
+export interface EnvHeaderProps extends ExpandControls {
   count: number
   onReset: () => void
   onEditInitEnv?: () => void
 }
 
-export interface ASTViewerProps {
+export interface ASTViewerProps extends ExpandControls {
   ast: ASTNode | null
 }
 

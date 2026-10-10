@@ -10,6 +10,16 @@ function rootChevron(container: HTMLElement): string {
 }
 
 describe('ASTViewer', () => {
+  it('shows the expand button only when a toggle handler is given', async () => {
+    const onToggleExpand = vi.fn()
+    const { rerender } = render(<ASTViewer ast={null} />)
+    expect(screen.queryByRole('button', { name: 'Pantalla completa' })).not.toBeInTheDocument()
+
+    rerender(<ASTViewer ast={null} onToggleExpand={onToggleExpand} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Pantalla completa' }))
+    expect(onToggleExpand).toHaveBeenCalledOnce()
+  })
+
   it('shows a placeholder message when there is no AST', () => {
     render(<ASTViewer ast={null} />)
     expect(screen.getByText('Ejecuta el código para ver el AST')).toBeInTheDocument()

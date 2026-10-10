@@ -20,4 +20,16 @@ describe('EnvHeader', () => {
     render(<EnvHeader count={0} onReset={vi.fn()} />)
     expect(screen.queryByRole('button', { name: 'editar init-env' })).not.toBeInTheDocument()
   })
+
+  it('shows the expand button and calls onToggleExpand', async () => {
+    const onToggleExpand = vi.fn()
+    render(<EnvHeader count={0} onReset={vi.fn()} expanded onToggleExpand={onToggleExpand} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Salir de pantalla completa' }))
+    expect(onToggleExpand).toHaveBeenCalledOnce()
+  })
+
+  it('hides the expand button without the callback', () => {
+    render(<EnvHeader count={0} onReset={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Pantalla completa' })).not.toBeInTheDocument()
+  })
 })

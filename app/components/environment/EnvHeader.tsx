@@ -1,6 +1,7 @@
 import type { EnvHeaderProps } from '@/app/types/props'
+import ExpandButton from '../layout/ExpandButton'
 
-export default function EnvHeader({ count, onReset, onEditInitEnv }: Readonly<EnvHeaderProps>) {
+export default function EnvHeader({ count, onReset, onEditInitEnv, expanded = false, onToggleExpand }: Readonly<EnvHeaderProps>) {
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
       <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Ambiente</span>
@@ -28,6 +29,7 @@ export default function EnvHeader({ count, onReset, onEditInitEnv }: Readonly<En
           </button>
         </div>
       )}
+      {onToggleExpand && <ExpandButton expanded={expanded} onToggle={onToggleExpand} />}
     </div>
   )
 }

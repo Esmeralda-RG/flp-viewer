@@ -5,8 +5,9 @@ import type { ASTViewerProps } from '@/app/types/props'
 import type { ExpandMode } from '@/app/types/ast'
 import { normalize } from '@/app/lib/ast-view'
 import TreeNode from './TreeNode'
+import ExpandButton from '../layout/ExpandButton'
 
-export default function ASTViewer({ ast }: Readonly<ASTViewerProps>) {
+export default function ASTViewer({ ast, expanded = false, onToggleExpand }: Readonly<ASTViewerProps>) {
   const [treeKey, setTreeKey] = useState(0)
   const [mode, setMode] = useState<ExpandMode>('partial')
 
@@ -26,24 +27,27 @@ export default function ASTViewer({ ast }: Readonly<ASTViewerProps>) {
     <div className="flex flex-col h-full bg-[#1e1e1e]">
       <div className="flex items-center justify-between px-3 py-1.5 bg-[#252526] border-b border-[#3c3c3c] shrink-0">
         <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">AST</span>
-        {root && (
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => applyMode('all')}
-              className="text-[10px] px-2 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
-            >
-              expandir todo
-            </button>
-            <button
-              type="button"
-              onClick={() => applyMode('none')}
-              className="text-[10px] px-2 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
-            >
-              colapsar todo
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {root && (
+            <>
+              <button
+                type="button"
+                onClick={() => applyMode('all')}
+                className="text-[10px] px-2 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
+              >
+                expandir todo
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMode('none')}
+                className="text-[10px] px-2 py-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
+              >
+                colapsar todo
+              </button>
+            </>
+          )}
+          {onToggleExpand && <ExpandButton expanded={expanded} onToggle={onToggleExpand} />}
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-3">

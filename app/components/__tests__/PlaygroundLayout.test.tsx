@@ -56,6 +56,23 @@ describe('PlaygroundLayout', () => {
     expect(screen.getByText('Sin ambientes activos')).toBeInTheDocument()
   })
 
+  it('expands one panel at a time to full screen and exits with Escape', async () => {
+    renderLayout()
+    const [astButton, envButton] = screen.getAllByRole('button', { name: 'Pantalla completa' })
+
+    await userEvent.click(astButton)
+    expect(screen.getByText('Ejecuta el código para ver el AST').closest('.fixed')).not.toBeNull()
+    expect(screen.getByText('Sin ambientes activos').closest('.fixed')).toBeNull()
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByText('Ejecuta el código para ver el AST').closest('.fixed')).toBeNull()
+
+    await userEvent.click(envButton)
+    expect(screen.getByText('Sin ambientes activos').closest('.fixed')).not.toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Salir de pantalla completa' }))
+    expect(screen.getByText('Sin ambientes activos').closest('.fixed')).toBeNull()
+  })
+
   it('does not show the grammar or init-env modals initially', () => {
     renderLayout()
     expect(screen.queryByTestId('grammar-modal')).not.toBeInTheDocument()

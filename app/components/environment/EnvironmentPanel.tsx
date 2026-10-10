@@ -8,7 +8,7 @@ import FrameCard from './FrameCard'
 import Arrow from './Arrow'
 import EnvHeader from './EnvHeader'
 
-export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<EnvironmentPanelProps>) {
+export default function EnvironmentPanel({ frames, onEditInitEnv, expanded, onToggleExpand }: Readonly<EnvironmentPanelProps>) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { t, reset } = usePanZoom(containerRef)
 
@@ -19,7 +19,13 @@ export default function EnvironmentPanel({ frames, onEditInitEnv }: Readonly<Env
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
-      <EnvHeader count={frames.length} onReset={reset} onEditInitEnv={onEditInitEnv} />
+      <EnvHeader
+        count={frames.length}
+        onReset={reset}
+        onEditInitEnv={onEditInitEnv}
+        expanded={expanded}
+        onToggleExpand={onToggleExpand}
+      />
 
       <div
         ref={containerRef}

@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ConsoleOutputProps } from '@/app/types/props'
-import { levelStyles, levelPrefix } from '@/app/lib/console-format'
+import { levelStyles, levelPrefix, PROMPT } from '@/app/lib/console-format'
+import { useInputHistory } from '@/app/hooks/useInputHistory'
+
+const MAX_INPUT_HEIGHT = 120
 
 export default function ConsoleOutput({
   logs,
@@ -15,79 +18,40 @@ export default function ConsoleOutput({
   pendingSteps,
   onNextStep,
 }: Readonly<ConsoleOutputProps>) {
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [prevSession, setPrevSession] = useState(false)
-  const [history, setHistory] = useState<string[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
-  const [draft, setDraft] = useState('')
+  const { record, onArrowUp, onArrowDown } = useInputHistory(inputValue, onInputChange)
+
+  const promptVisible = sessionActive && !running && pendingSteps === 0
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [logs])
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [logs, running, pendingSteps, sessionActive])
 
   useEffect(() => {
-    if (sessionActive && !prevSession) {
-      textareaRef.current?.focus()
-    }
-    setPrevSession(sessionActive)
-  }, [sessionActive, prevSession])
+    if (promptVisible) textareaRef.current?.focus()
+  }, [promptVisible])
 
   useEffect(() => {
     const ta = textareaRef.current
     if (!ta) return
     ta.style.height = 'auto'
-    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`
-  }, [inputValue])
+    ta.style.height = `${Math.min(ta.scrollHeight, MAX_INPUT_HEIGHT)}px`
+  }, [inputValue, promptVisible])
 
-  const handleEnterKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault()
-    if (!sessionActive || running || !inputValue.trim()) return
     const val = inputValue.trim()
-    setHistory(prev => prev.at(-1) === val ? prev : [...prev, val])
-    setHistoryIndex(-1)
-    setDraft('')
+    if (!val) return
+    record(val)
     onSubmit()
   }
 
-  const handleArrowUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const ta = e.currentTarget
-    if (ta.value.slice(0, ta.selectionStart ?? 0).includes('\n')) return
-    if (history.length === 0) return
-    e.preventDefault()
-    if (historyIndex === -1) {
-      setDraft(inputValue)
-      const idx = history.length - 1
-      setHistoryIndex(idx)
-      onInputChange(history[idx])
-      return
-    }
-    if (historyIndex > 0) {
-      const idx = historyIndex - 1
-      setHistoryIndex(idx)
-      onInputChange(history[idx])
-    }
-  }
-
-  const handleArrowDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (historyIndex === -1) return
-    const ta = e.currentTarget
-    if (ta.value.slice(ta.selectionStart ?? ta.value.length).includes('\n')) return
-    e.preventDefault()
-    if (historyIndex >= history.length - 1) {
-      setHistoryIndex(-1)
-      onInputChange(draft)
-      return
-    }
-    const idx = historyIndex + 1
-    setHistoryIndex(idx)
-    onInputChange(history[idx])
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) return handleEnterKey(e)
-    if (e.key === 'ArrowUp') return handleArrowUp(e)
-    if (e.key === 'ArrowDown') return handleArrowDown(e)
+    if (e.key === 'Enter' && !e.shiftKey) return handleEnter(e)
+    if (e.key === 'ArrowUp') return onArrowUp(e)
+    if (e.key === 'ArrowDown') return onArrowDown(e)
   }
 
   return (
@@ -103,64 +67,56 @@ export default function ConsoleOutput({
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto p-2 font-mono text-xs">
-        {logs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-zinc-400">
-            {sessionActive ? 'Escribe una expresión y presiona Enter' : 'Presiona ▶ Ejecutar para comenzar'}
+      <div ref={scrollRef} role="log" aria-live="polite" className="flex-1 overflow-auto p-2 font-mono text-xs space-y-0.5">
+        {logs.map((log) => (
+          <div
+            key={log.id}
+            data-testid="console-line"
+            data-level={log.level}
+            className={`flex gap-2 items-start ${levelStyles[log.level]}`}
+          >
+            <span className="shrink-0 text-right w-6 opacity-70 pt-px">{levelPrefix[log.level]}</span>
+            <pre className="break-all whitespace-pre-wrap font-mono flex-1 min-w-0">{log.message}</pre>
           </div>
-        ) : (
-          <div className="space-y-0.5">
-            {logs.map((log) => (
-              <div
-                key={log.id}
-                data-testid="console-line"
-                data-level={log.level}
-                className={`flex gap-2 items-start ${levelStyles[log.level]}`}
-              >
-                <span className="shrink-0 text-right w-6 opacity-70 pt-px">
-                  {levelPrefix[log.level]}
-                </span>
-                <pre className="break-all whitespace-pre-wrap font-mono flex-1 min-w-0">{log.message}</pre>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-        )}
-      </div>
+        ))}
 
-      <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] flex items-start gap-2 px-3 py-2 shrink-0">
-        {pendingSteps > 0 ? (
-          <>
-            <span className="font-mono text-xs pt-0.75 shrink-0 text-blue-400 select-none">--&gt;</span>
+        {!sessionActive && (
+          <div className="text-zinc-400">Presiona ▶ Ejecutar para comenzar</div>
+        )}
+
+        {sessionActive && running && (
+          <div className="text-zinc-500 animate-pulse pl-8">ejecutando…</div>
+        )}
+
+        {sessionActive && pendingSteps > 0 && (
+          <div className="flex gap-2 items-start">
+            <span className="shrink-0 text-right w-6 text-blue-400 select-none">{PROMPT}</span>
             <button
               onClick={onNextStep}
-              className="flex-1 text-left text-xs text-blue-300 hover:text-blue-200 transition-colors"
+              className="flex-1 text-left text-blue-300 hover:text-blue-200 transition-colors"
             >
               ▶ Siguiente paso{' '}
               <span className="ml-2 text-[10px] text-zinc-500">({pendingSteps} restante{pendingSteps === 1 ? '' : 's'})</span>
             </button>
-          </>
-        ) : (
-          <>
-            <span className={`font-mono text-xs pt-0.75 shrink-0 select-none ${sessionActive ? 'text-sky-400' : 'text-zinc-400'}`}>
-              --&gt;
-            </span>
+          </div>
+        )}
+
+        {promptVisible && (
+          <label className="flex gap-2 items-start">
+            <span className="shrink-0 text-right w-6 text-sky-400 select-none pt-px">{PROMPT}</span>
             <textarea
               ref={textareaRef}
               data-testid="console-input"
+              aria-label="Entrada de la consola"
               value={inputValue}
               onChange={(e) => onInputChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={sessionActive ? 'expresión… (Enter ejecuta · Shift+Enter nueva línea)' : 'Presiona ▶ Ejecutar para activar'}
-              disabled={!sessionActive || running}
+              placeholder="expresión… (Enter ejecuta · Shift+Enter nueva línea)"
               rows={1}
               spellCheck={false}
-              className="flex-1 resize-none bg-transparent font-mono text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none disabled:opacity-50 leading-relaxed"
+              className="flex-1 min-w-0 resize-none bg-transparent font-mono text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none leading-relaxed"
             />
-            {running && (
-              <span className="text-[10px] text-zinc-500 pt-1 shrink-0 animate-pulse">ejecutando…</span>
-            )}
-          </>
+          </label>
         )}
       </div>
     </div>

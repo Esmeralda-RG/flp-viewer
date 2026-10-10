@@ -6,6 +6,7 @@ import Navbar from './Navbar'
 import ResizeBar from './ResizeBar'
 import EditorPanel from '../editor/EditorPanel'
 import ASTViewer from '../ast/ASTViewer'
+import ExpandablePanel from './ExpandablePanel'
 import ConsoleOutput from '../console/ConsoleOutput'
 import EnvironmentPanel from '../environment/EnvironmentPanel'
 import GrammarModal from '../modals/GrammarModal'
@@ -14,7 +15,7 @@ import InitEnvModal from '../modals/InitEnvModal'
 import HelpDrawer from '../help/HelpDrawer'
 import { useProjectFiles } from '@/app/hooks/useProjectFiles'
 import { useRacketSession } from '@/app/hooks/useRacketSession'
-import type { PlaygroundLayoutProps } from '@/app/types/props'
+import type { PlaygroundLayoutProps, ExpandedPanel } from '@/app/types/props'
 import type { Example } from '@/app/types/examples'
 import type { GeneratedGrammarFiles } from '@/app/types/editor'
 
@@ -25,6 +26,10 @@ export default function PlaygroundLayout({ examples, helpSections, glossaryTerms
   const [grammarModalOpen, setGrammarModalOpen] = useState(false)
   const [initEnvModalOpen, setInitEnvModalOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
+
+  const toggleExpand = (panel: Exclude<ExpandedPanel, null>) =>
+    setExpandedPanel((current) => (current === panel ? null : panel))
 
   const handleRun = () => {
     void session.run(projectFiles.files.map((f) => ({ name: f.name, content: f.content })))
@@ -74,14 +79,24 @@ export default function PlaygroundLayout({ examples, helpSections, glossaryTerms
               <Panel id="right-column" defaultSize={45} minSize={20}>
                 <Group orientation="vertical" style={{ height: '100%' }}>
                   <Panel id="ast-viewer" defaultSize={55} minSize={20}>
-                    <ASTViewer ast={session.ast} />
+                    <ExpandablePanel expanded={expandedPanel === 'ast'} onCollapse={() => setExpandedPanel(null)}>
+                      <ASTViewer
+                        ast={session.ast}
+                        expanded={expandedPanel === 'ast'}
+                        onToggleExpand={() => toggleExpand('ast')}
+                      />
+                    </ExpandablePanel>
                   </Panel>
                   <ResizeBar className="h-1 cursor-row-resize" />
                   <Panel id="env-panel" defaultSize={45} minSize={20}>
-                    <EnvironmentPanel
-                      frames={session.frames}
-                      onEditInitEnv={() => setInitEnvModalOpen(true)}
-                    />
+                    <ExpandablePanel expanded={expandedPanel === 'env'} onCollapse={() => setExpandedPanel(null)}>
+                      <EnvironmentPanel
+                        frames={session.frames}
+                        onEditInitEnv={() => setInitEnvModalOpen(true)}
+                        expanded={expandedPanel === 'env'}
+                        onToggleExpand={() => toggleExpand('env')}
+                      />
+                    </ExpandablePanel>
                   </Panel>
                 </Group>
               </Panel>

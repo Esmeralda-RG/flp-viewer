@@ -1,5 +1,7 @@
 import type { LogLevel } from '@/app/types/console'
 
+export const PROMPT = '-->'
+
 export const levelStyles: Record<LogLevel, string> = {
   input:  'text-sky-300',
   output: 'text-green-400',
@@ -9,7 +11,7 @@ export const levelStyles: Record<LogLevel, string> = {
 }
 
 export const levelPrefix: Record<LogLevel, string> = {
-  input:  '-->',
+  input:  PROMPT,
   output: '→',
   info:   'i',
   warn:   '⚠',

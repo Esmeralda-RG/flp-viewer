@@ -29,15 +29,16 @@ function makeProps(overrides = {}) {
 }
 
 describe('ConsoleOutput', () => {
-  describe('empty state', () => {
-    it('shows inactive prompt message when session is not active', () => {
+  describe('inactive session', () => {
+    it('shows start message and no textbox', () => {
       render(<ConsoleOutput {...makeProps()} />)
       expect(screen.getByText('Presiona ▶ Ejecutar para comenzar')).toBeInTheDocument()
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     })
 
-    it('shows active prompt message when session is active', () => {
-      render(<ConsoleOutput {...makeProps({ sessionActive: true })} />)
-      expect(screen.getByText('Escribe una expresión y presiona Enter')).toBeInTheDocument()
+    it('keeps previous logs visible', () => {
+      render(<ConsoleOutput {...makeProps({ logs: [makeLog('output', '42')] })} />)
+      expect(screen.getByText('42')).toBeInTheDocument()
     })
   })
 
@@ -60,6 +61,19 @@ describe('ConsoleOutput', () => {
       expect(screen.getByText('algo salió mal')).toBeInTheDocument()
     })
 
+    it('renders input logs with the prompt and output logs with the arrow', () => {
+      const logs = [makeLog('input', '(+ 1 2)'), makeLog('output', '3')]
+      render(<ConsoleOutput {...makeProps({ logs })} />)
+      const [input, output] = screen.getAllByTestId('console-line')
+      expect(input).toHaveTextContent('-->(+ 1 2)')
+      expect(output).toHaveTextContent('→3')
+    })
+
+    it('renders the error prefix', () => {
+      render(<ConsoleOutput {...makeProps({ logs: [makeLog('error', 'boom')] })} />)
+      expect(screen.getByTestId('console-line')).toHaveTextContent('✕boom')
+    })
+
     it('renders multiple logs in order', () => {
       const logs = [makeLog('input', 'primero'), makeLog('output', 'segundo')]
       render(<ConsoleOutput {...makeProps({ logs })} />)
@@ -78,19 +92,35 @@ describe('ConsoleOutput', () => {
   })
 
   describe('input area', () => {
-    it('textarea is disabled when session is not active', () => {
-      render(<ConsoleOutput {...makeProps({ sessionActive: false })} />)
-      expect(screen.getByRole('textbox')).toBeDisabled()
-    })
-
     it('textarea is enabled when session is active', () => {
       render(<ConsoleOutput {...makeProps({ sessionActive: true })} />)
       expect(screen.getByRole('textbox')).not.toBeDisabled()
     })
 
-    it('textarea is disabled when running', () => {
+    it('renders the prompt after the logs', () => {
+      const logs = [makeLog('output', 'x')]
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, logs })} />)
+      const line = screen.getByTestId('console-line')
+      const textbox = screen.getByRole('textbox')
+      expect(line.compareDocumentPosition(textbox) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('focuses the textarea when the session becomes active', () => {
+      const { rerender } = render(<ConsoleOutput {...makeProps()} />)
+      rerender(<ConsoleOutput {...makeProps({ sessionActive: true })} />)
+      expect(screen.getByRole('textbox')).toHaveFocus()
+    })
+
+    it('hides the textarea and shows the running indicator while running', () => {
       render(<ConsoleOutput {...makeProps({ sessionActive: true, running: true })} />)
-      expect(screen.getByRole('textbox')).toBeDisabled()
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+      expect(screen.getByText('ejecutando…')).toBeInTheDocument()
+    })
+
+    it('restores focus when running finishes', () => {
+      const { rerender } = render(<ConsoleOutput {...makeProps({ sessionActive: true, running: true })} />)
+      rerender(<ConsoleOutput {...makeProps({ sessionActive: true, running: false })} />)
+      expect(screen.getByRole('textbox')).toHaveFocus()
     })
 
     it('calls onInputChange as user types', async () => {
@@ -107,44 +137,46 @@ describe('ConsoleOutput', () => {
       expect(onSubmit).toHaveBeenCalledOnce()
     })
 
-    it('does not call onSubmit when session is inactive', async () => {
+    it('does not submit blank input', async () => {
       const onSubmit = vi.fn()
-      render(<ConsoleOutput {...makeProps({ sessionActive: false, inputValue: 'test', onSubmit })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, inputValue: '   ', onSubmit })} />)
       await userEvent.type(screen.getByRole('textbox'), '{Enter}')
       expect(onSubmit).not.toHaveBeenCalled()
     })
 
-    it('shows running indicator when running', () => {
-      render(<ConsoleOutput {...makeProps({ sessionActive: true, running: true })} />)
-      expect(screen.getByText('ejecutando…')).toBeInTheDocument()
+    it('Shift+Enter does not submit', async () => {
+      const onSubmit = vi.fn()
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, inputValue: 'test', onSubmit })} />)
+      await userEvent.type(screen.getByRole('textbox'), '{Shift>}{Enter}{/Shift}')
+      expect(onSubmit).not.toHaveBeenCalled()
     })
   })
 
   describe('step mode', () => {
     it('shows step button when pendingSteps > 0', () => {
-      render(<ConsoleOutput {...makeProps({ pendingSteps: 3 })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, pendingSteps: 3 })} />)
       expect(screen.getByRole('button', { name: /Siguiente paso/ })).toBeInTheDocument()
     })
 
     it('shows correct count of remaining steps', () => {
-      render(<ConsoleOutput {...makeProps({ pendingSteps: 5 })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, pendingSteps: 5 })} />)
       expect(screen.getByText(/5 restantes/)).toBeInTheDocument()
     })
 
     it('shows singular form for 1 step', () => {
-      render(<ConsoleOutput {...makeProps({ pendingSteps: 1 })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, pendingSteps: 1 })} />)
       expect(screen.getByText(/1 restante\b/)).toBeInTheDocument()
     })
 
     it('calls onNextStep when clicking the step button', async () => {
       const onNextStep = vi.fn()
-      render(<ConsoleOutput {...makeProps({ pendingSteps: 2, onNextStep })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, pendingSteps: 2, onNextStep })} />)
       await userEvent.click(screen.getByRole('button', { name: /Siguiente paso/ }))
       expect(onNextStep).toHaveBeenCalledOnce()
     })
 
     it('hides textarea when pendingSteps > 0', () => {
-      render(<ConsoleOutput {...makeProps({ pendingSteps: 1, sessionActive: true })} />)
+      render(<ConsoleOutput {...makeProps({ sessionActive: true, pendingSteps: 1 })} />)
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     })
   })
